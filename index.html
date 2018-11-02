@@ -7,6 +7,7 @@
         <meta name="description" content="Site Description Here">
 		
 		<link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
+		<link rel="icon" href="indigo.ico">
 		
 		<style>
 			/* external css: flickity.css */
@@ -66,7 +67,7 @@
 			
 			.border:hover
 			{
-			  box-shadow: inset 0 0 0 85px rgba(0,0,0,0.3);
+			  box-shadow: inset 0 0 0 35px rgba(0,0,0,0.3);
 		      transition:all 0.3s ease;
 			}
 			
@@ -117,23 +118,40 @@
 			
 			.img-1 {
 				background-image: url('img/shoes1.png');
+				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+				filter: grayscale(50%);
 			}
 			
 			.img-2 {
 				background-image: url('img/video1.png');
+				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+				filter: grayscale(50%);
 			}
 			
 			.img-3 {
 				background-image: url('https://pro2-bar-s3-cdn-cf.myportfolio.com/674c6b548c581632a19dc679673fc87f/8eae1e8b20d92a77de05357a_rw_1920.png?h=bcf3c416df044bf08771ace551c1e09d');
+				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+				filter: grayscale(50%);
 				}
 			
 			.img-4 {
 				background-image: url('https://pro2-bar-s3-cdn-cf.myportfolio.com/674c6b548c581632a19dc679673fc87f/89874512d14e410148a45089_rw_1200.png?h=fef4bf64e22184945a4ce4fb2f41bb8a');
+				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+				filter: grayscale(50%);
 			}
 			
 			.img-5 {
 				background-image: url('img/book1.png');
+				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+				filter: grayscale(50%);
 			}
+			
+			
+			.img-1:hover{filter: saturate(150%);}
+			.img-2:hover{filter: saturate(150%);}
+			.img-3:hover{filter: saturate(150%);}
+			.img-4:hover{filter: saturate(150%);}
+			.img-5:hover{filter: saturate(150%);}
 			
 		</style>
 		
