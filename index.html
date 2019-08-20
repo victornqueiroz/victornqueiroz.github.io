@@ -1,187 +1,272 @@
+
 <!doctype html>
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>INDIGO.tokyo</title>
+        <title></title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="Site Description Here">
-		
-		<link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
-		<link rel="icon" href="indigo.ico">
-		
-		<style>
-			/* external css: flickity.css */
-			
-			* { box-sizing: border-box; }
-			
-			body { font-family: sans-serif; margin: 0; background: black;
-			}
-			
-			.carousel {
-			  background: #000;
-			}
-			
-			/* flickity on by default */
-			.carousel:after {
-			  content: 'flickity';
-			  display: none;
-			}
-			
-			@media screen and ( max-width: 768px ) {
-			  /* disable Flickity for large devices */
-			  .carousel-cell {
-			  	background-color: black!important;
-			  	width: 100%!important;
-			  	height: 23vh!important;
-			  	
-			  }
-			  
-			  .carousel:after {
-			    content: ''; 
-			  }
-			}
-			
-			.carousel-cell {
-			  width: 25%;
-			  height: 100vh;
-			  margin-right: 1px;
-			  margin-bottom: 0px;
-			  background: black;
-			  counter-increment: carousel-cell;
-			}
-			
-			/* no margin bottom when Flickity enabled */
-			.flickity-enabled .carousel-cell {
-			  margin-bottom: 0;
-			}
-			
-			/* cell number 
-			.carousel-cell:before {
-			  display: block;
-			  text-align: center;
-			  content: counter(carousel-cell);
-			  font-size: 80px;
-			  color: white;
-			}
-			*/
-			
-			.border:hover
-			{
-			  box-shadow: inset 0 0 0 35px rgba(0,0,0,0.3);
-		      transition:all 0.3s ease;
-			}
-			
-			
-			.logo {
-			    position: absolute;
-			    top: 40px;
-			    left: 11vw;
-			    font-size: 32px;
-			    color: white;
-			    font-weight: bold;
-			    z-index: 1;
-			    font-family: 'Josefin Sans', sans-serif;
-			    letter-spacing: -3px;
-			}
-			
-			/* no circle */
-			.flickity-button {
-			  background: transparent;
-			}
-			
-			.flickity-button:hover {
-			  background: transparent;
-			}
-			/* big previous & next buttons */
-			.flickity-prev-next-button {
-			  width: 100px;
-			  height: 100px;
-			  opacity: 0.5;
-			}
-			
-			.flickity-prev-next-button :hover {
-			  fill: #aaa;
-			  transition: 0.5s ease-in-out 0s;
-			}
-			/* icon color */
-			.flickity-button-icon {
-			  fill: white;
-			}
-			/* hide disabled button */
-			.flickity-button:disabled {
-			  display: none;
-			}
-			
-			.bg-image {
-				background-position: center;
-				background-repeat: no-repeat;
-				background-size: cover;
-			}
-			
-			.img-1 {
-				background-image: url('img/shoes1.png');
-				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
-				filter: grayscale(50%);
-			}
-			
-			.img-2 {
-				background-image: url('img/video1.png');
-				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
-				filter: grayscale(50%);
-			}
-			
-			.img-3 {
-				background-image: url('https://pro2-bar-s3-cdn-cf.myportfolio.com/674c6b548c581632a19dc679673fc87f/8eae1e8b20d92a77de05357a_rw_1920.png?h=bcf3c416df044bf08771ace551c1e09d');
-				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
-				filter: grayscale(50%);
-				}
-			
-			.img-4 {
-				background-image: url('https://pro2-bar-s3-cdn-cf.myportfolio.com/674c6b548c581632a19dc679673fc87f/89874512d14e410148a45089_rw_1200.png?h=fef4bf64e22184945a4ce4fb2f41bb8a');
-				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
-				filter: grayscale(50%);
-			}
-			
-			.img-5 {
-				background-image: url('img/book1.png');
-				webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
-				filter: grayscale(50%);
-			}
-			
-			a.fill-div {
-			    display: block;
-			    height: 100%;
-			    width: 100%;
-			    text-decoration: none;
-			}
-			
-			
-			.img-1:hover{filter: saturate(150%);}
-			.img-2:hover{filter: saturate(150%);}
-			.img-3:hover{filter: saturate(150%);}
-			.img-4:hover{filter: saturate(150%);}
-			.img-5:hover{filter: saturate(150%);}
-			
-		</style>
+        <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" media="all">
+        <link href="css/themify-icons.css" rel="stylesheet" type="text/css" media="all" />
+        <link href="css/bootstrap.css" rel="stylesheet" type="text/css" media="all" />
+        <link href="css/flexslider.css" rel="stylesheet" type="text/css" media="all" />
+        <link href="css/theme-fire.css" rel="stylesheet" type="text/css" media="all" />
+        <link href="css/custom.css" rel="stylesheet" type="text/css" media="all" />
+        <link href='http://fonts.googleapis.com/css?family=Lato:300,400%7CRaleway:100,400,300,500,600,700%7COpen+Sans:400,500,600' rel='stylesheet' type='text/css'>
 		
     </head>
     <body>
+				
+		<div class="nav-container"><nav class="absolute transparent">
+		        <div class="nav-bar" style="border: none;">
+		            <div class="module left">
+		                <a href="index.html">
+		                    <div class="vnu"><img class="logo logo-light" alt="Exentive" src="img/exentive-white.png"></div>
+		                    <img class="logo logo-dark" alt="Exentive" src="img/exentivelogowhite.png">
+		                </a>
+		            </div>
+		            <div class="module widget-handle mobile-toggle right visible-sm visible-xs" style="border: none!important;">
+		                <i class="ti-menu"></i>
+		            </div>
+		            <div class="module-group right">
+		                <div class="module left">
+		                    <ul class="menu">
+		                        <li>
+		                        </li><li class="vpf">
+		                            <a href="contact.html">CONTACT US</a>
+		                        </li><li class="vpf">
+		                            <a href="#">日本語</a>
+		                        </li>
+		                        
+		                        
+		                    </ul>
+		                </div>
+		                
+		                
+		            </div>
+		            
+		        </div>
+		    </nav>
+		    
+		    
 		
-		
-		<div class="logo">INDIGO <!--<span style="font-size: 16px; letter-spacing: 8px;">.tokyo</span></span>--></div>
-		
-		
-		<!-- Flickity HTML init -->
-		<div class="carousel" data-flickity='{ "watchCSS": true , "freeScroll": true, "wrapAround": true, "pageDots": false, "imagesLoaded": true}'>
-		  <div class="carousel-cell border bg-image img-1"><a href="project5.html" class="fill-div"></a></div>
-		  <div class="carousel-cell border bg-image img-2"><a href="project4.html" class="fill-div"></a></div>
-		  <div class="carousel-cell border bg-image img-3"><a href="project1.html" class="fill-div"></a></div>
-		  <div class="carousel-cell border bg-image img-4"><a href="project2.html" class="fill-div"></a></div>
-		  <div class="carousel-cell border bg-image img-5"><a href="project3.html" class="fill-div"></a></div>
 		</div>
 		
+		<div class="main-container">
+					
+			<section id="first" class="cover fullscreen image-slider slider-all-controls controls-inside parallax">
+		        <ul class="slides">
+		            <li class="overlay image-bg">
+		                <div class="background-image-holder hidden-xs">
+		                    <img alt="image" class="background-image " src="img/bg13.jpg">
+		                </div>
+						
+						<div class="background-image-holder hidden-sm hidden-md hidden-lg">
+						    <img alt="image" class="background-image " src="img/bg17.jpg">
+						</div>
+						
+						
+		                <div class="container v-align-transform">
+		                    <div class="row">
+		                        <div class="col-xs-10 col-xs-offset-1 col-sm-offset-0 col-sm-7">
+		                            <h1 class="mb40 mb-xs-16 large">Find the best executives in Japan</h1>
+		                            <h6 class="uppercase mb16">Exentive is a boutique executive search and HR consulting firm headquartered in Japan<br><br><br></h6>
+		                            
+		                            <a class="btn btn-lg btn-primary" href="contact.html">Talk to us</a>
+		                        </div>
+		                    </div>
+		                    
+		                </div>
+		                
+		            </li>
+		        </ul>
+		    </section>
+			
+			
+			<section id="why" class="bg-dark pb120">
+				<li class="overlay image-bg">
+				    <div class="background-image-holder">
+				        <img alt="image" class="background-image" src="img/bg.jpg">
+				    </div>
+		        <div class="container">
+		            <div class="row v-align-children">
+		                <div class="col-xs-10 col-xs-offset-1 col-md-7 col-sm-6 text-center mb-xs-24">
+		                    <img class="cast-shadow" alt="Screenshot" src="img/img001.jpg">
+		                </div>
+		                <div class="col-xs-10 col-xs-offset-1 col-md-4 col-md-offset-1 col-sm-5 col-sm-offset-1">
+		                    <h2>Why Exentive</h3>
+								<div style="width: 60px; padding: 10px 0;">
+								<hr>
+								</div>
+								
+		                    <p style="font-size: 15px;">
+		                        With over 20 years candidate sourcing in Japan and across Asia, we are connected to those who most matter to you. Having worked with candidates and clients across the region, we understand the differences, and are situated to act as an advisor to better assist you with your needs.
+		                    </p>
+		                </div>
+		            </div>
+		            
+		        </div>
+				</li>
+		        
+		    </section>
+			
+			<section id="sri" class="image-bg overlay pt240 pb240 pt-xs-80 pb-xs-80 parallax">
+				
+				
+				
+				<div class="background-image-holder hidden-xs">
+					<img alt="image" class="background-image" src="img/srikesh01.jpg">
+				</div>
+				
+				
+				
+				<div class="container">
+					<div class="row">
+						<div class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-6">
+							
+							<div class="hidden-lg hidden-md hidden-sm" style="margin-bottom: 30px;">
+								<img alt="image" class="background-image" src="img/sri01.jpg">
+							
+							</div>
+							
+							<h1 class="mb0 uppercase bold italic">Srikesh Chidambara</h1>
+							<h5 class="uppercase mb32">CEO</h5>
+							<p class="lead mb0">Srikesh Chidambaram has worked closely with candidates and clients for over 10 years having first started in a consulting role and transitioning quickly to leadership positions, as well as managing an entire recruitment office. He played key roles in starting up divisions for well known global and Japan based recruiting brands allowing him to support local and multinational companies across the region.<br><br>His passion in recruitment focuses on Country Managers, Sales Directors, IT &amp; Operations Directors, Project Managers, Analysts, and Engineers for the vast spectrum of technology related clients as well as for the financial and health care sectors.</p>
+						</div>
+					</div>
+					
+				</div>
+				
+			</section>
+			
+			<section class="page-title page-title-3 bg-secondary bg-dark"  style="padding: 96px 0;">
+				<li class="overlay image-bg">
+				    <div class="background-image-holder">
+				        <img alt="image" class="background-image" src="img/bg.jpg">
+				    </div>
+		        <div class="container">
+		        		            <div class="row">
+		        		                <div class="col-sm-12 text-center">
+		        		                    <h4 class="mb0 inline-block p32 p0-xs"> We have over 20 years of candidate sourcing experience in Japan and across Asia.</h3>
+		        		                </div>
+		        		            </div>
+		        		            
+		        		        </div>
+				</li>
+		        
+		    </section><section id="howard"class="image-bg overlay pt240 pb240 pt-xs-80 pb-xs-80 parallax">
+				<div class="background-image-holder hidden-xs">
+					<img alt="image" class="background-image" src="img/howard01.jpg">
+				</div>
+				<div class="container">
+					<div class="row">
+						<div class="col-xs-10 col-xs-offset-1 col-sm-6">
+							
+							
+							<div class="hidden-lg hidden-md hidden-sm" style="margin-bottom: 30px;">
+								<img alt="image" class="background-image" src="img/howard02.jpg">
+							</div>
+							
+							<h1 class="mb0 uppercase bold italic">HOWARD FU</h1>
+							<h5 class="uppercase mb32">GENERAL MANAGER</h5>
+							<p class="lead mb0">Howard Fu is one of the most connected recruiters in Asia having covered both contingency and retainer searches through Japan, Singapore, the US, and China. He comes from the IT industry and is well connected through his MBA network as well as several startup and side businesses.<br><br>Howard primarily focuses on searches through the financial services and technology startup sectors especially for those clients looking to hire across Asia.</p>
+						</div>
+					</div>
+					
+				</div>
+				
+			</section>
+			
+			<section class="bg-dark bg-secondary">
+				<li class="overlay image-bg">
+				    <div class="background-image-holder">
+				        <img alt="image" class="background-image" src="img/bg.jpg">
+				    </div>
+		        <div class="container">
+		            <div class="row">
+		                <div class="col-xs-offset-1 col-xs-10 col-sm-offset-2 text-center col-sm-8">
+		                    <h3 class="mb64 uppercase">OUR CLIENTS</h3>
+		                    <div class="testimonials text-slider slider-arrow-controls">
+		                        <ul class="slides">
+		                            
+		                            <li>
+		                                <p class="lead">The staff here were excellent and were very professional. I was coming in from overseas and needed to quickly find a job. Their communication was great and they kept me updated with potential opportunities. They were able to place me in my new position quickly and efficiently. From the initial meeting to the interviews, they provided me support, interview tips, and encouragement in finding my new position. On my first day, they even sent me a good luck message and asked how the job was going. Exentive provides outstanding service and I would recommend them to any candidate or employer.</p>
+		                                <div class="quote-author">
+		                                    
+		                                    <h6 class="uppercase">CRAIG B.</h6>
+		                                    <span>-Chief Architect, Consulting Co.</span>
+		                                </div>
+		                            </li><li>
+		                                <p class="lead">Mr. Chidambaramは、リテイナーとして業務受託者と同時にアドバイザーとしても機能しました。弊社所属マーケットにおける競争力(SWOT)や市況の分析(market analysis)を基に一年以上も空席だったポジションを適格な人材で埋める事に成功しました。Exentiveは、今後アジア拡張における良きパートナーとなりました。。</p>
+		                                <div class="quote-author">
+		                                    
+		                                    <h6 class="uppercase">MASAHIRO H.</h6>
+		                                    <span>- Client, Information Security Company</span>
+		                                </div>
+		                            </li>
+		                            <li>
+		                                <p class="lead">Exentiveのチダムバラムさんより紹介された企業についてのpro/conを包み隠さず丁寧に説明して頂いたので、最終決断する時に役に立ちました。また今後のキャリアについても大変参考になりました。</p>
+		                                <div class="quote-author">
+		                                    
+		                                    <h6 class="uppercase">YUKIKO S.</h6>
+		                                    <span>- Business Analyst, Financial Services CompanyYukiko S. - Business Analyst, Financial Services Company</span>
+		                                </div>
+		                            </li>
+		                        </ul>
+		                    </div>
+		                </div>
+		            </div>
+		            
+		        </div>
+				</li>
+		    </section>
+			
+			<section class="bg-dark pt64 pb64">
+					        <div class="container">
+					            <div class="row">
+					                <div class="col-xs-10 col-xs-offset-1 col-sm-offset-0 col-sm-12 text-center">
+					                    <h2 class="mb8">Want to know more?</h2>
+					                    <p class="lead mb40 mb-xs-24">
+					                        Send us a message and let's discuss about it in more detail.</p>
+					                    <a class="btn btn-primary btn-lg mb0" href="contact.html">Get in touch</a>
+					                </div>
+					            </div>
+					            
+					        </div>
+					        
+					    </section>
+			
+			<footer class="footer-2 bg-dark text-center-xs" style="border-top: 1px solid #444;">
+				<div class="container">
+					<div class="row">
+						<div class="col-xs-4">
+							<a href="#"><div class="vnu"><img class="image-xxs fade-half" alt="Pic" src="img/exentive-white.png"></div></a>
+						</div>
+					
+						<div class="col-xs-4 text-center">
+							<span class="fade-half">
+								© <span class="hidden-xs">Copyright</span> 2019 Exentive <span class="hidden-xs"> - All Rights Reserved</span>
+							</span>
+						</div>
+					
+						<div class="col-xs-4 text-right text-center-xs">
+							<ul class="list-inline social-list">
+								<li><a href="#"><i class="ti-twitter-alt"></i></a></li>
+								<li><a href="#"><i class="ti-facebook"></i></a></li>
+								<li><a href="#"><i class="ti ti-linkedin"></i></a></li>
+								
+							</ul>
+						</div>
+					</div>
+				</div>
+			</footer>
+		</div>
 		
-		<script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
-
+				
+	<script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/flexslider.min.js"></script>
+        <script src="js/parallax.js"></script>
+        <script src="js/scripts.js"></script>
     </body>
 </html>
+				
