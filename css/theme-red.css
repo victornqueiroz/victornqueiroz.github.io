@@ -38,8 +38,19 @@
  34. Twitter
  35. Footers
  36. Spacing
+ 
+ 
+ 
+ 
+ /* CUSTOM */
+ 
+ #contact p {
+ 	margin-bottom: 3px;
+ }
+ 
 
 /*!---------- 1. GLOBAL STYLES ----------*/
+
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -633,8 +644,8 @@ footer.bg-dark li,
   height: 100%;
   top: 0;
   left: 0;
-  background: #292929;
-  opacity: 0.3;
+  background: #333;
+  opacity: 0.6;
   z-index: 2;
 }
 .overlay-heavy:before {
@@ -4120,7 +4131,7 @@ video {
   height: 100%;
   top: 0;
   left: 0;
-  background: #222222;
+  background: #e31d3b;
   opacity: 0.5;
   z-index: 2;
 }
@@ -5710,3 +5721,4 @@ footer.bg-dark a {
     padding-bottom: 240px !important;
   }
 }
+
