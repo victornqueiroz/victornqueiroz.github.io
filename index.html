@@ -271,7 +271,7 @@
 
     function rollNextTile() {
       const nextTurn = placedCount + 1;
-      if (nextTurn % 5 === 0) {
+      if (nextTurn % 6 === 0) {
         currentTile = BIRD_TILE;
       } else {
         currentTile = natureTiles[Math.floor(Math.random() * natureTiles.length)];
