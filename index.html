@@ -92,22 +92,20 @@
       font-weight: 700;
     }
     .turn-log { display: flex; flex-direction: column; gap: 6px; font-size: 14px; min-width: 0; min-height: 60px; }
-    .turn-values { display: flex; justify-content: center; gap: 10px; align-items: baseline; font-size: 18px; font-weight: 600; }
-    .turn-values span:first-child { text-align: right; min-width: 70px; }
-    .turn-values span:last-child { text-align: left; min-width: 60px; }
+    .turn-values { display: grid; grid-template-columns: auto auto auto; justify-content: center; gap: 6px; align-items: baseline; font-size: 24px; font-weight: 600; }
+    .turn-values span { text-align: center; min-width: 50px; }
+    .turn-multiply-symbol { min-width: 20px; }
     .turn-tiles {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-      gap: 4px 12px;
-      font-size: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px 12px;
+      font-size: 14px;
       min-height: 36px;
+      margin-top:13px;
     }
     .turn-nature, .turn-items {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      align-items: flex-start;
       min-height: 32px;
+      text-align: left;
     }
     .turn-nature span, .turn-items span { padding: 0; border: none; }
     #totalScore { font-size: clamp(28px, 5vw, 36px); font-weight: 700; }
@@ -545,7 +543,8 @@
       turnLogEl.innerHTML = `
         <div class="turn-values">
           <span id="turnPoints">0</span>
-          <span id="turnMultiplier">× 1</span>
+          <span class="turn-multiply-symbol">×</span>
+          <span id="turnMultiplier">1</span>
         </div>
         <div id="turnTiles" class="turn-tiles">
           <div class="turn-nature" id="turnNature"></div>
@@ -600,7 +599,7 @@
       const turnPointsEl = document.getElementById("turnPoints");
       const turnMultiplierEl = document.getElementById("turnMultiplier");
       if (turnPointsEl) turnPointsEl.textContent = turnBaseScore;
-      if (turnMultiplierEl) turnMultiplierEl.textContent = `× ${mult}`;
+      if (turnMultiplierEl) turnMultiplierEl.textContent = mult;
       turnFinalEl.textContent = subtotal;
     }
 
