@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>5x5 Tile Prototype</title>
   <style>
+    :root { color-scheme: dark; }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: flex;
@@ -12,25 +13,25 @@
       justify-content: flex-start;
       min-height: 100vh;
       margin: 0;
-      padding: 20px;
+      padding: clamp(12px, 4vw, 30px);
       box-sizing: border-box;
       background: #0f172a;
       color: #e5e7eb;
     }
-    .info { margin-bottom: 10px; text-align: center; }
+    .info { margin-bottom: 10px; text-align: center; max-width: 460px; }
+    .board-wrapper { width: min(94vw, 480px); margin-top: 10px; }
     .board {
+      width: 100%;
       display: grid;
-      grid-template-columns: repeat(7, 60px);
-      grid-template-rows: repeat(7, 60px);
-      gap: 6px;
-      margin-top: 10px;
+      grid-template-columns: repeat(7, 1fr);
+      gap: clamp(4px, 1vw, 8px);
       position: relative;
     }
     .cell {
-      width: 60px; height: 60px; border-radius: 10px;
+      width: 100%; aspect-ratio: 1 / 1; border-radius: 10px;
       background: #1e293b; border: 1px solid #334155;
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px; cursor: pointer;
+      font-size: clamp(22px, 4.5vw, 28px); cursor: pointer;
       transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.1s ease;
       box-shadow: 0 2px 4px rgba(15, 23, 42, 0.6);
       user-select: none;
@@ -50,6 +51,8 @@
       background: #1f2937; border: 1px solid #4b5563;
       display: inline-flex; align-items: center; gap: 16px;
       font-size: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     .current-tile {
       font-size: 28px; padding: 4px 14px; border-radius: 999px;
@@ -66,12 +69,14 @@
     .scoreboard {
       margin: 16px 0;
       display: flex;
-      gap: 32px;
+      gap: clamp(16px, 4vw, 32px);
       background: #111827;
-      padding: 16px 20px;
+      padding: clamp(12px, 3vw, 20px);
       border-radius: 18px;
       border: 1px solid #1f2937;
       align-items: flex-start;
+      flex-wrap: wrap;
+      width: min(100%, 520px);
     }
     .score-heading {
       font-size: 14px;
@@ -80,10 +85,10 @@
       color: #94a3b8;
       margin-bottom: 6px;
     }
-    .calc-column { min-width: 240px; }
-    .score-column { min-width: 150px; text-align: center; }
+    .calc-column { flex: 1 1 220px; }
+    .score-column { flex: 1 1 140px; text-align: center; }
     .score-value {
-      font-size: 28px;
+      font-size: clamp(28px, 6vw, 40px);
       font-weight: 700;
     }
     .turn-log { display: flex; flex-direction: column; gap: 6px; font-size: 15px; min-width: 220px; min-height: 60px; }
@@ -92,7 +97,7 @@
     .turn-values span:last-child { text-align: left; min-width: 60px; }
     .turn-tiles {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
       gap: 4px 12px;
       font-size: 16px;
       min-height: 36px;
@@ -105,8 +110,15 @@
       min-height: 32px;
     }
     .turn-nature span, .turn-items span { padding: 0; border: none; }
-    #totalScore { font-size: 28px; font-weight: 700; }
-    .tile-base { font-size: 26px; line-height: 1; }
+    #totalScore { font-size: clamp(28px, 5vw, 36px); font-weight: 700; }
+    @media (max-width: 540px) {
+      h1 { font-size: clamp(22px, 6vw, 26px); text-align: center; }
+      .scoreboard { flex-direction: column; align-items: stretch; }
+      .score-column { text-align: left; }
+      .panel { flex-direction: column; border-radius: 18px; }
+      .info { font-size: 14px; }
+    }
+    .tile-base { font-size: clamp(24px, 4vw, 28px); line-height: 1; }
     .tile-attachment-food,
     .tile-attachment-insect {
       position: absolute;
@@ -130,12 +142,12 @@
     }
     .flyover-bird {
       position: absolute;
-      width: 60px;
-      height: 60px;
+      width: calc(100% / 7);
+      height: calc(100% / 7);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 30px;
+      font-size: clamp(24px, 5vw, 34px);
       pointer-events: none;
       opacity: 0;
       transform: translate(-9999px, -9999px);
@@ -162,7 +174,9 @@
     </div>
   </div>
   
-  <div id="board" class="board"></div>
+  <div class="board-wrapper">
+    <div id="board" class="board"></div>
+  </div>
   <div class="panel">
     <span>Current tile:</span>
     <span id="currentTile" class="current-tile">?</span>
