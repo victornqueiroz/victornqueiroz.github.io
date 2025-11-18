@@ -19,7 +19,8 @@
       color: #e5e7eb;
     }
     .info { margin-bottom: 10px; text-align: center; max-width: 460px; }
-    .board-wrapper { width: min(94vw, 480px); margin-top: 10px; }
+    .board-wrapper, .scoreboard, .panel { width: min(94vw, 480px); }
+    .board-wrapper { margin-top: 10px; }
     .board {
       width: 100%;
       display: grid;
@@ -47,9 +48,9 @@
     }
     .cell.disabled { cursor: default; opacity: 0.6; }
     .panel {
-      margin-top: 10px; padding: 10px 14px; border-radius: 999px;
+      margin: 30px auto; padding: 12px 18px; border-radius: 18px;
       background: #1f2937; border: 1px solid #4b5563;
-      display: inline-flex; align-items: center; gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       font-size: 16px;
       flex-wrap: wrap;
       justify-content: center;
@@ -69,14 +70,13 @@
     .scoreboard {
       margin: 16px 0;
       display: flex;
-      gap: clamp(16px, 4vw, 32px);
+      gap: clamp(12px, 3vw, 20px);
       background: #111827;
-      padding: clamp(12px, 3vw, 20px);
+      padding: clamp(10px, 3vw, 18px);
       border-radius: 18px;
       border: 1px solid #1f2937;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      width: min(100%, 520px);
+      align-items: stretch;
+      flex-wrap: nowrap;
     }
     .score-heading {
       font-size: 14px;
@@ -85,14 +85,14 @@
       color: #94a3b8;
       margin-bottom: 6px;
     }
-    .calc-column { flex: 1 1 220px; }
-    .score-column { flex: 1 1 140px; text-align: center; }
+    .calc-column { flex: 1.2 1 0; min-width: 0; }
+    .score-column { flex: 0.6 1 0; text-align: center; }
     .score-value {
       font-size: clamp(28px, 6vw, 40px);
       font-weight: 700;
     }
-    .turn-log { display: flex; flex-direction: column; gap: 6px; font-size: 15px; min-width: 220px; min-height: 60px; }
-    .turn-values { display: flex; justify-content: center; gap: 12px; align-items: baseline; font-size: 20px; font-weight: 600; }
+    .turn-log { display: flex; flex-direction: column; gap: 6px; font-size: 14px; min-width: 0; min-height: 60px; }
+    .turn-values { display: flex; justify-content: center; gap: 10px; align-items: baseline; font-size: 18px; font-weight: 600; }
     .turn-values span:first-child { text-align: right; min-width: 70px; }
     .turn-values span:last-child { text-align: left; min-width: 60px; }
     .turn-tiles {
@@ -192,8 +192,7 @@
     const natureTiles = ["🌿", "💧", "🌱"];
     let currentTile = null;
     let placedCount = 0;
-    //const totalPlayable = (SIZE - 2) * (SIZE + 2);
-    const totalPlayable = 50;
+    const totalPlayable = (SIZE - 2) * (SIZE + 2);
     let isAnimating = false;
     const FLYOVER_STEP_MS = 220;
     const FLYOVER_FADE_MS = 220;
@@ -204,7 +203,7 @@
     let scoreTransferring = false;
     let scoreTransferTimer = null;
     let scoreTransferFrame = null;
-    const SCORE_TRANSFER_DELAY = 500;
+    const SCORE_TRANSFER_DELAY = 700;
     const SCORE_TRANSFER_DURATION = 900;
 
     const natureDisplayOrder = ["🌿", "🌱", "💧", "🌳", "🌻", "🪵"];
@@ -274,7 +273,7 @@
 
     function rollNextTile() {
       const nextTurn = placedCount + 1;
-      if (nextTurn % 6 === 0) {
+      if (nextTurn % 5 === 0) {
         currentTile = BIRD_TILE;
       } else {
         currentTile = natureTiles[Math.floor(Math.random() * natureTiles.length)];
