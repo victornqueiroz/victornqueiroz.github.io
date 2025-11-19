@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>5x5 Tile Prototype</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(12px, 4vw, 30px);
+      box-sizing: border-box;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    .info { margin-bottom: 10px; text-align: center; max-width: 460px; }
+    .board-wrapper, .scoreboard, .panel { width: min(94vw, 480px); }
+    .board-wrapper { margin-top: 10px; }
+    .board {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: clamp(4px, 1vw, 8px);
+      position: relative;
+    }
+    .cell {
+      width: 100%; aspect-ratio: 1 / 1; border-radius: 10px;
+      background: #1e293b; border: 1px solid #334155;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(22px, 4.5vw, 28px); cursor: pointer;
+      transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.1s ease;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.6);
+      user-select: none;
+      position: relative;
+    }
+    .cell.inner { background: #1e293b; }
+    .cell.offboard { background: #0f172a; border-style: dashed; }
+    .cell.dead { background: #030712; border-color: #111827; cursor: default; opacity: 0.4; }
+    .cell:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(15, 23, 42, 0.8);
+      background: #111827;
+    }
+    .cell.disabled { cursor: default; opacity: 0.6; }
+    .panel {
+      margin: 30px auto; padding: 12px 18px; border-radius: 18px;
+      background: #1f2937; border: 1px solid #4b5563;
+      display: flex; align-items: center; gap: 16px;
+      font-size: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .current-tile {
+      font-size: 28px; padding: 4px 14px; border-radius: 999px;
+      background: #111827; border: 1px solid #4b5563; min-width: 50px;
+      text-align: center;
+    }
+    .btn-row { margin-top: 14px; display: flex; gap: 10px; }
+    button {
+      background: #22c55e; color: #022c22; border: none;
+      border-radius: 999px; padding: 8px 16px; font-size: 14px;
+      cursor: pointer; font-weight: 600;
+    }
+    button.secondary { background: #4b5563; color: #e5e7eb; }
+    .scoreboard {
+      margin: 16px 0;
+      display: flex;
+      gap: clamp(12px, 3vw, 20px);
+      background: #111827;
+      padding: clamp(10px, 3vw, 18px);
+      border-radius: 18px;
+      border: 1px solid #1f2937;
+      align-items: stretch;
+      flex-wrap: nowrap;
+    }
+    .score-heading {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .calc-column { flex: 1.2 1 0; min-width: 0; }
+    .score-column { flex: 0.6 1 0; text-align: center; }
+    .score-value {
+      font-size: clamp(28px, 6vw, 40px);
+      font-weight: 700;
+    }
+    .turn-log { display: flex; flex-direction: column; gap: 6px; font-size: 14px; min-width: 0; min-height: 60px; }
+    .turn-values { display: grid; grid-template-columns: auto auto auto; justify-content: center; gap: 6px; align-items: baseline; font-size: 24px; font-weight: 600; }
+    .turn-values span { text-align: center; min-width: 50px; }
+    .turn-multiply-symbol { min-width: 20px; }
+    .turn-tiles {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px 12px;
+      font-size: 14px;
+      min-height: 36px;
+      margin-top:13px;
+    }
+    .turn-nature, .turn-items {
+      min-height: 32px;
+      text-align: left;
+    }
+    .turn-nature span, .turn-items span { padding: 0; border: none; }
+    #totalScore { font-size: clamp(28px, 5vw, 36px); font-weight: 700; }
+    @media (max-width: 540px) {
+      h1 { font-size: clamp(22px, 6vw, 26px); text-align: center; }
+      .scoreboard { flex-direction: column; align-items: stretch; }
+      .score-column { text-align: left; }
+      .panel { flex-direction: column; border-radius: 18px; }
+      .info { font-size: 14px; }
+    }
+    .tile-base { font-size: clamp(24px, 4vw, 28px); line-height: 1; }
+    .tile-attachment-food,
+    .tile-attachment-insect {
+      position: absolute;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .tile-attachment-food {
+      top: 6px;
+      right: 6px;
+    }
+    .tile-attachment-insect {
+      bottom: 6px;
+      right: 6px;
+    }
+    .cell.clearing {
+      animation: fadeOut 0.25s forwards;
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.8); }
+    }
+    .flyover-bird {
+      position: absolute;
+      width: calc(100% / 7);
+      height: calc(100% / 7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(24px, 5vw, 34px);
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-9999px, -9999px);
+      transition: transform 0.22s ease, opacity 0.15s ease;
+    }
+    .flyover-bird.active {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wildforest</h1>
+  <div class="scoreboard">
+    <div class="calc-column">
+      <div id="turnLog" class="turn-log"></div>
+    </div>
+    <div class="score-column">
+      <div class="score-heading">Turn Score</div>
+      <div class="score-value" id="turnFinal">0</div>
+    </div>
+    <div class="score-column">
+      <div class="score-heading">Total Score</div>
+      <div class="score-value" id="totalScore">0</div>
+    </div>
+  </div>
+  
+  <div class="board-wrapper">
+    <div id="board" class="board"></div>
+  </div>
+  <div class="panel">
+    <span>Current tile:</span>
+    <span id="currentTile" class="current-tile">?</span>
+    <span>Turns:</span>
+    <span id="placedCount">0</span> / <span id="totalPlayable">0</span>
+  </div>
+  <script>
+    const SIZE = 7;
+    const INNER_START = 1;
+    const INNER_END = SIZE - 2;
+    const BIRD_TILE = "🐦";
+    let board = [];
+    const natureTiles = ["🌿", "💧", "🌱"];
+    let currentTile = null;
+    let placedCount = 0;
+    const totalPlayable = (SIZE - 2) * (SIZE + 2);
+    let isAnimating = false;
+    const FLYOVER_STEP_MS = 220;
+    const FLYOVER_FADE_MS = 220;
+    let turnBaseScore = 0;
+    let turnAttachmentCount = 0;
+    let turnFinalized = false;
+    let totalScore = 0;
+    let scoreTransferring = false;
+    let scoreTransferTimer = null;
+    let scoreTransferFrame = null;
+    const SCORE_TRANSFER_DELAY = 700;
+    const SCORE_TRANSFER_DURATION = 900;
+
+    const natureDisplayOrder = ["🌿", "🌱", "💧", "🌳", "🌻", "🪵"];
+    const attachmentDisplayOrder = ["🐟", "🌼", "🍎", "🪷", "🫘", "🕷️", "🦋"];
+
+    const boardEl = document.getElementById("board");
+    const currentTileEl = document.getElementById("currentTile");
+    const placedCountEl = document.getElementById("placedCount");
+    const totalPlayableEl = document.getElementById("totalPlayable");
+    totalPlayableEl.textContent = totalPlayable;
+    const turnLogEl = document.getElementById("turnLog");
+    const turnFinalEl = document.getElementById("turnFinal");
+    const totalScoreEl = document.getElementById("totalScore");
+    const flyoverBirdEl = document.createElement("div");
+    flyoverBirdEl.className = "flyover-bird";
+    flyoverBirdEl.textContent = BIRD_TILE;
+    boardEl.appendChild(flyoverBirdEl);
+
+    const TILE_POINTS = {
+      "": 0,
+      "🌿": 10,
+      "🌱": 10,
+      "💧": 20,
+      "🌳": 30,
+      "🌻": 30,
+      "🪵": 50,
+      "🐟": 100,
+      "🌼": 100,
+      "🍎": 100,
+      "🪷": 200,
+      "🫘": 200,
+      "🕷️": 300,
+      "🦋": 300,
+    };
+
+    function initBoard() {
+      cancelScoreTransferAnimation();
+      scoreTransferring = false;
+      boardEl.innerHTML = "";
+      board = [];
+      for (let r = 0; r < SIZE; r++) {
+        const row = [];
+        for (let c = 0; c < SIZE; c++) {
+          row.push(null);
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          if (isCorner(r, c)) {
+            cell.classList.add("dead");
+          } else if (isOffboard(r, c)) {
+            cell.classList.add("offboard");
+          } else {
+            cell.classList.add("inner");
+          }
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.onclick = () => onCellClick(r, c);
+          boardEl.appendChild(cell);
+        }
+        board.push(row);
+      }
+      boardEl.appendChild(flyoverBirdEl);
+      placedCount = 0;
+      placedCountEl.textContent = placedCount;
+      rollNextTile();
+      startTurnScore();
+    }
+
+    function rollNextTile() {
+      const nextTurn = placedCount + 1;
+      if (nextTurn % 6 === 0) {
+        currentTile = BIRD_TILE;
+      } else {
+        currentTile = natureTiles[Math.floor(Math.random() * natureTiles.length)];
+      }
+      currentTileEl.textContent = currentTile;
+    }
+
+    function onCellClick(r, c) {
+      if (isAnimating || scoreTransferring || !currentTile) return;
+      if (!canPlaceHere(r, c)) return;
+      startTurnScore();
+      beginTurn();
+      board[r][c] = createTile(currentTile, { shielded: true, attachmentCooldown: true });
+      updateCell(r, c);
+      placedCount++;
+      placedCountEl.textContent = placedCount;
+      if (currentTile === BIRD_TILE) {
+        birdFlyover(r, c);
+      } else {
+        applyAdjacencyRules(r, c);
+        finalizeTurnScore();
+      }
+      rollNextTile();
+    }
+
+    function cellIndex(r, c) {
+      return r * SIZE + c;
+    }
+
+    function getCellElement(r, c) {
+      return boardEl.children[cellIndex(r, c)];
+    }
+
+    function updateCell(r, c) {
+      const cell = getCellElement(r, c);
+      const tile = board[r][c];
+      if (!tile) {
+        cell.innerHTML = "";
+        return;
+      }
+      let html = `<span class="tile-base">${tile.base}</span>`;
+      if (tile.foodAttachment) {
+        html += `<span class="tile-attachment-food">${tile.foodAttachment}</span>`;
+      }
+      if (tile.insectAttachment) {
+        html += `<span class="tile-attachment-insect">${tile.insectAttachment}</span>`;
+      }
+      cell.innerHTML = html;
+    }
+
+    function neighbors(r, c) {
+      return [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].filter(([nr,nc]) =>
+        nr>=0 && nr<SIZE && nc>=0 && nc<SIZE
+      );
+    }
+
+    function isCorner(r, c) {
+      const last = SIZE - 1;
+      return (
+        (r === 0 && c === 0) ||
+        (r === 0 && c === last) ||
+        (r === last && c === 0) ||
+        (r === last && c === last)
+      );
+    }
+
+    function isOffboard(r, c) {
+      const last = SIZE - 1;
+      if (isCorner(r, c)) return false;
+      return r === 0 || c === 0 || r === last || c === last;
+    }
+
+    function isInner(r, c) {
+      return r >= INNER_START && r <= INNER_END && c >= INNER_START && c <= INNER_END;
+    }
+
+    function canPlaceHere(r, c) {
+      if (isCorner(r, c)) return false;
+      if (board[r][c]) return false;
+      if (currentTile === BIRD_TILE) {
+        return isOffboard(r, c);
+      }
+      return isInner(r, c);
+    }
+
+    function createTile(base, overrides = {}) {
+      return {
+        base,
+        foodAttachment: null,
+        insectAttachment: null,
+        shielded: false,
+        attachmentCooldown: false,
+        ...overrides,
+      };
+    }
+
+    function beginTurn() {
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          const tile = board[r][c];
+          if (tile) {
+            tile.shielded = false;
+            tile.attachmentCooldown = false;
+          }
+        }
+      }
+    }
+
+    function transformNeighbor(sourceTile, targetTile) {
+      if (!sourceTile || !targetTile || targetTile.shielded) return false;
+      let changed = false;
+      if (sourceTile.base === "🌱" && targetTile.base === "🌱") {
+        targetTile.base = "🌻";
+        targetTile.foodAttachment = null;
+        targetTile.insectAttachment = null;
+        targetTile.attachmentCooldown = true;
+        changed = true;
+      } else if (sourceTile.base === "🌿" && targetTile.base === "🌿") {
+        targetTile.base = "🌳";
+        targetTile.foodAttachment = null;
+        targetTile.insectAttachment = null;
+        targetTile.attachmentCooldown = true;
+        changed = true;
+      } else if (sourceTile.base === "💧" && targetTile.base === "💧") {
+        changed = tryAddFoodAttachment(targetTile, "🐟") || changed;
+      } else if (sourceTile.base === "🌻" && targetTile.base === "💧") {
+        changed = tryAddFoodAttachment(targetTile, "🪷") || changed;
+      } else if (sourceTile.base === "🌳" && targetTile.base === "🌳") {
+        changed = tryAddFoodAttachment(targetTile, "🍎") || changed;
+      } else if (sourceTile.base === "💧" && targetTile.base === "🌳") {
+        changed = tryAddFoodAttachment(targetTile, "🍎") || changed;
+      } else if (sourceTile.base === "🌻" && targetTile.base === "🌻") {
+        changed = tryAddFoodAttachment(targetTile, "🌼") || changed;
+      } else if (sourceTile.base === "💧" && targetTile.base === "🌻") {
+        changed = tryAddFoodAttachment(targetTile, "🌼") || changed;
+      } else if (sourceTile.base === "🌳" && targetTile.base === "🌻") {
+        changed = tryAddFoodAttachment(targetTile, "🫘") || changed;
+      } else if (sourceTile.base === "🌳" && targetTile.base === "💧") {
+        changed = tryAddInsectAttachment(targetTile, "🕷️") || changed;
+      } else if (sourceTile.base === "🌻" && targetTile.base === "🌳") {
+        changed = tryAddInsectAttachment(targetTile, "🦋") || changed;
+      }
+      return changed;
+    }
+
+    function tryAddFoodAttachment(tile, attachment) {
+      if (tile.attachmentCooldown) return false;
+      if (tile.foodAttachment && tile.foodAttachment === attachment) return false;
+      if (tile.foodAttachment) return false;
+      tile.foodAttachment = attachment;
+      return true;
+    }
+
+    function tryAddInsectAttachment(tile, attachment) {
+      if (tile.attachmentCooldown) return false;
+      if (tile.insectAttachment && tile.insectAttachment === attachment) return false;
+      if (tile.insectAttachment) return false;
+      tile.insectAttachment = attachment;
+      return true;
+    }
+
+    function applyAdjacencyRules(r, c) {
+      const queue = [[r, c]];
+      while (queue.length) {
+        const [cr, cc] = queue.shift();
+        const tile = board[cr][cc];
+        if (!tile) continue;
+        neighbors(cr, cc).forEach(([nr, nc]) => {
+          const existing = board[nr][nc];
+          if (transformNeighbor(tile, existing)) {
+            updateCell(nr, nc);
+            queue.push([nr, nc]);
+          }
+        });
+      }
+    }
+
+    function birdFlyover(r, c) {
+      const targets = [];
+      if (r === 0) {
+        for (let row = INNER_START; row <= INNER_END; row++) targets.push([row, c]);
+      } else if (r === SIZE - 1) {
+        for (let row = INNER_END; row >= INNER_START; row--) targets.push([row, c]);
+      } else if (c === 0) {
+        for (let col = INNER_START; col <= INNER_END; col++) targets.push([r, col]);
+      } else if (c === SIZE - 1) {
+        for (let col = INNER_END; col >= INNER_START; col--) targets.push([r, col]);
+      }
+      if (!targets.length) {
+        finalizeBirdFlight(r, c);
+        return;
+      }
+      const path = [[r, c], ...targets];
+      isAnimating = true;
+      flyoverBirdEl.classList.add("active");
+      path.forEach(([cr, cc], idx) => {
+        setTimeout(() => {
+          moveFlyoverBirdTo(cr, cc);
+          if (idx > 0) fadeOutCell(cr, cc);
+        }, idx * FLYOVER_STEP_MS);
+      });
+      const totalDuration = path.length * FLYOVER_STEP_MS + FLYOVER_FADE_MS;
+      setTimeout(() => {
+        finalizeBirdFlight(r, c);
+      }, totalDuration);
+    }
+
+    function finalizeBirdFlight(r, c) {
+      board[r][c] = null;
+      updateCell(r, c);
+      flyoverBirdEl.classList.remove("active");
+      flyoverBirdEl.style.transform = "translate(-9999px, -9999px)";
+      isAnimating = false;
+      finalizeTurnScore();
+    }
+
+    function moveFlyoverBirdTo(r, c) {
+      const cell = getCellElement(r, c);
+      if (!cell) return;
+      const boardRect = boardEl.getBoundingClientRect();
+      const cellRect = cell.getBoundingClientRect();
+      const x = cellRect.left - boardRect.left;
+      const y = cellRect.top - boardRect.top;
+      flyoverBirdEl.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function fadeOutCell(r, c) {
+      const cell = getCellElement(r, c);
+      if (!cell || !board[r][c]) return;
+      addTurnScoreFromTile(board[r][c]);
+      cell.classList.add("clearing");
+      setTimeout(() => {
+        board[r][c] = null;
+        updateCell(r, c);
+        cell.classList.remove("clearing");
+      }, FLYOVER_FADE_MS);
+    }
+
+    function startTurnScore() {
+      turnBaseScore = 0;
+      turnAttachmentCount = 0;
+      turnFinalized = false;
+      turnLogEl.innerHTML = "";
+      turnFinalEl.textContent = "0";
+    }
+
+    function addTurnScoreFromTile(tile) {
+      const base = TILE_POINTS[tile.base] || 0;
+      let attachmentPoints = 0;
+      let newAttachments = 0;
+      if (tile.foodAttachment) {
+        attachmentPoints += TILE_POINTS[tile.foodAttachment] || 0;
+        newAttachments += 1;
+      }
+      if (tile.insectAttachment) {
+        attachmentPoints += TILE_POINTS[tile.insectAttachment] || 0;
+        newAttachments += 1;
+      }
+      const added = base + attachmentPoints;
+      turnBaseScore += added;
+      turnAttachmentCount += newAttachments;
+      ensureTurnDisplayInitialized();
+      appendTurnTile(tile);
+      updateTurnFinal();
+    }
+
+    function ensureTurnDisplayInitialized() {
+      if (document.getElementById("turnPoints")) return;
+      turnLogEl.innerHTML = `
+        <div class="turn-values">
+          <span id="turnPoints">0</span>
+          <span class="turn-multiply-symbol">×</span>
+          <span id="turnMultiplier">1</span>
+        </div>
+        <div id="turnTiles" class="turn-tiles">
+          <div class="turn-nature" id="turnNature"></div>
+          <div class="turn-items" id="turnItems"></div>
+        </div>
+      `;
+    }
+
+    function appendTurnTile(tile) {
+      const natureEl = document.getElementById("turnNature");
+      const itemsEl = document.getElementById("turnItems");
+      if (!natureEl || !itemsEl) return;
+      insertEmojiOrdered(natureEl, tile.base, natureDisplayOrder);
+      if (tile.foodAttachment) insertEmojiOrdered(itemsEl, tile.foodAttachment, attachmentDisplayOrder);
+      if (tile.insectAttachment) insertEmojiOrdered(itemsEl, tile.insectAttachment, attachmentDisplayOrder);
+    }
+
+    function insertEmojiOrdered(container, emoji, order) {
+      if (!emoji) return;
+      const spans = Array.from(container.children);
+      let insertIndex = spans.length;
+      spans.some((span, idx) => {
+        const curr = span.dataset.emoji || span.textContent;
+        if (orderIndex(order, emoji) < orderIndex(order, curr)) {
+          insertIndex = idx;
+          return true;
+        }
+        return false;
+      });
+      const span = document.createElement("span");
+      span.dataset.emoji = emoji;
+      span.textContent = emoji;
+      if (insertIndex >= spans.length) {
+        container.appendChild(span);
+      } else {
+        container.insertBefore(span, spans[insertIndex]);
+      }
+    }
+
+    function orderIndex(order, emoji) {
+      const idx = order.indexOf(emoji);
+      return idx === -1 ? order.length : idx;
+    }
+
+    function currentMultiplier() {
+      return Math.max(1, turnAttachmentCount || 1);
+    }
+
+    function updateTurnFinal() {
+      const mult = currentMultiplier();
+      const subtotal = turnBaseScore * mult;
+      const turnPointsEl = document.getElementById("turnPoints");
+      const turnMultiplierEl = document.getElementById("turnMultiplier");
+      if (turnPointsEl) turnPointsEl.textContent = turnBaseScore;
+      if (turnMultiplierEl) turnMultiplierEl.textContent = mult;
+      turnFinalEl.textContent = subtotal;
+    }
+
+    function finalizeTurnScore() {
+      if (turnFinalized) return;
+      turnFinalized = true;
+      updateTurnFinal();
+      const finalScore = parseInt(turnFinalEl.textContent, 10) || 0;
+      beginScoreTransfer(finalScore);
+    }
+
+    function beginScoreTransfer(amount) {
+      cancelScoreTransferAnimation();
+      if (amount <= 0) {
+        turnFinalEl.textContent = "0";
+        scoreTransferring = false;
+        return;
+      }
+      scoreTransferring = true;
+      const startTotal = totalScore;
+      const startAmount = amount;
+      scoreTransferTimer = setTimeout(() => {
+        const startTime = performance.now();
+        const step = (now) => {
+          const progress = Math.min(1, (now - startTime) / SCORE_TRANSFER_DURATION);
+          const remaining = Math.max(0, Math.round(startAmount * (1 - progress)));
+          const gained = startAmount - remaining;
+          turnFinalEl.textContent = remaining;
+          totalScoreEl.textContent = startTotal + gained;
+          if (progress < 1) {
+            scoreTransferFrame = requestAnimationFrame(step);
+          } else {
+            totalScore = startTotal + startAmount;
+            turnFinalEl.textContent = "0";
+            totalScoreEl.textContent = totalScore;
+            scoreTransferring = false;
+            scoreTransferFrame = null;
+          }
+        };
+        scoreTransferFrame = requestAnimationFrame(step);
+      }, SCORE_TRANSFER_DELAY);
+    }
+
+    function cancelScoreTransferAnimation() {
+      if (scoreTransferTimer) {
+        clearTimeout(scoreTransferTimer);
+        scoreTransferTimer = null;
+      }
+      if (scoreTransferFrame) {
+        cancelAnimationFrame(scoreTransferFrame);
+        scoreTransferFrame = null;
+      }
+      scoreTransferring = false;
+    }
+
+    initBoard();
+  </script>
+</body>
+</html>

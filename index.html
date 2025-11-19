@@ -18,6 +18,49 @@
       background: #0f172a;
       color: #e5e7eb;
     }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr minmax(0, 600px) minmax(260px, 360px);
+      gap: clamp(12px, 3vw, 24px);
+      width: 100%;
+      max-width: 1200px;
+      align-items: start;
+    }
+    .col-empty { min-height: 1px; }
+    .col-main { display: flex; flex-direction: column; align-items: center; }
+    .col-guide {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 18px;
+      padding: 16px;
+      color: #f1f5f9;
+      height: fit-content;
+      margin-top: 27%;
+    }
+    .col-guide h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      text-align: center;
+    }
+    .guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .guide-table th, .guide-table td {
+      border-bottom: 1px solid #1e293b;
+      padding: 6px 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .guide-table tr:last-child td { border-bottom: none; }
+    @media (max-width: 960px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .col-guide { order: 3; }
+      .col-empty { display: none; }
+    }
     .info { margin-bottom: 10px; text-align: center; max-width: 460px; }
     .board-wrapper, .scoreboard, .panel { width: min(94vw, 480px); }
     .board-wrapper { margin-top: 10px; }
@@ -37,6 +80,14 @@
       box-shadow: 0 2px 4px rgba(15, 23, 42, 0.6);
       user-select: none;
       position: relative;
+    }
+    .tile-content {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .cell.inner { background: #1e293b; }
     .cell.offboard { background: #0f172a; border-style: dashed; }
@@ -95,6 +146,7 @@
     .turn-values { display: grid; grid-template-columns: auto auto auto; justify-content: center; gap: 6px; align-items: baseline; font-size: 24px; font-weight: 600; }
     .turn-values span { text-align: center; min-width: 50px; }
     .turn-multiply-symbol { min-width: 20px; }
+    .turn-result { font-size: 24px; font-weight: 700; text-align: center; min-height: 28px; opacity: 0; transition: opacity 0.2s ease; }
     .turn-tiles {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -107,7 +159,25 @@
       min-height: 32px;
       text-align: left;
     }
-    .turn-nature span, .turn-items span { padding: 0; border: none; }
+    .turn-nature span, .turn-items span {
+      padding: 0;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .calc-consuming { opacity: 0; transform: scale(0.4); }
+    .score-bump {
+      animation: scoreBump 0.35s ease;
+    }
+    @keyframes scoreBump {
+      0% { transform: translateY(0) scale(1); }
+      25% { transform: translateY(-4px) scale(1.1); }
+      60% { transform: translateY(0) scale(0.95); }
+      80% { transform: translateY(-2px) scale(1.04); }
+      100% { transform: translateY(0) scale(1); }
+    }
     #totalScore { font-size: clamp(28px, 5vw, 36px); font-weight: 700; }
     @media (max-width: 540px) {
       h1 { font-size: clamp(22px, 6vw, 26px); text-align: center; }
@@ -134,6 +204,35 @@
     .cell.clearing {
       animation: fadeOut 0.25s forwards;
     }
+    .tile-feedback {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translate(-50%, -60%);
+      background: #030712;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: clamp(16px, 3.6vw, 22px);
+      font-weight: 600;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 25;
+      color: #f8fafc;
+      white-space: nowrap;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .tile-feedback.visible {
+      opacity: 1;
+      transform: translate(-50%, -110%);
+    }
+    .tile-content span {
+      transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+    .consuming-piece {
+      opacity: 0 !important;
+      transform: scale(0.4) !important;
+    }
     @keyframes fadeOut {
       from { opacity: 1; transform: scale(1); }
       to { opacity: 0; transform: scale(0.8); }
@@ -157,29 +256,63 @@
   </style>
 </head>
 <body>
-  <h1>Wildforest</h1>
-  <div class="scoreboard">
-    <div class="calc-column">
-      <div id="turnLog" class="turn-log"></div>
+  <div class="layout">
+    <div class="col-empty"></div>
+    <div class="col-main">
+      <h1>Wildforest</h1>
+      <div class="scoreboard">
+        <div class="calc-column">
+          <div id="turnLog" class="turn-log"></div>
+        </div>
+        <div class="score-column">
+          <div class="score-heading">Total Score</div>
+          <div class="score-value" id="totalScore">0</div>
+        </div>
+      </div>
+      
+      <div class="board-wrapper">
+        <div id="board" class="board"></div>
+      </div>
+      <div class="panel">
+        <span>Current tile:</span>
+        <span id="currentTile" class="current-tile">?</span>
+        <span>Turns:</span>
+        <span id="placedCount">0</span> / <span id="totalPlayable">0</span>
+      </div>
     </div>
-    <div class="score-column">
-      <div class="score-heading">Turn Score</div>
-      <div class="score-value" id="turnFinal">0</div>
+    <div class="col-guide">
+      <h2>Quick Guide</h2>
+      <table class="guide-table">
+        <thead>
+          <tr>
+            <th>Emoji</th>
+            <th>Score</th>
+            <th>How to gain</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>🌿</td><td>10</td><td>basic</td></tr>
+          <tr><td>💧</td><td>20</td><td>basic</td></tr>
+          <tr><td>🌱</td><td>10</td><td>basic</td></tr>
+          <tr><td>🌳</td><td>30</td><td>🌿 + 🌿</td></tr>
+          <tr><td>🌻</td><td>30</td><td>🌱 + 🌱</td></tr>
+          <tr><td>🪵</td><td>50</td><td>🌳 → 🪵</td></tr>
+          <tr><td>🐟</td><td>100</td><td>💧 + 💧</td></tr>
+          <tr><td>🪷</td><td>200</td><td>🌻 + 💧</td></tr>
+          <tr><td>🍎</td><td>100</td><td>🌳 + 🌳 / 💧 + 🌳</td></tr>
+          <tr><td>🌼</td><td>100</td><td>🌻 + 🌻 / 💧 + 🌻</td></tr>
+          <tr><td>🫘</td><td>200</td><td>🌳 + 🌻</td></tr>
+          <tr><td>🍄</td><td>2000 </td><td>🪵 + 🪵 / 💧 + 🪵</td></tr>
+          <tr><td>🕷️</td><td>+2 mult</td><td>🌳 + 💧</td></tr>
+          <tr><td>🦋</td><td>+3 mult</td><td>🌻 + 🌳</td></tr>
+          <tr><td>🐌</td><td>points ×3</td><td>🪵 + 💧</td></tr>
+          <tr><td>🐝</td><td>mult ×3</td><td>🪵 + 🌻</td></tr>
+          <tr><td>🐜</td><td>+7 mult</td><td>🪵 + 🌳</td></tr>
+          <tr><td>🐛</td><td>+7 mult</td><td>🌻 + 🪵</td></tr>
+          <tr><td>🦂</td><td>mult ×5</td><td>🌳 + 🪵</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="score-column">
-      <div class="score-heading">Total Score</div>
-      <div class="score-value" id="totalScore">0</div>
-    </div>
-  </div>
-  
-  <div class="board-wrapper">
-    <div id="board" class="board"></div>
-  </div>
-  <div class="panel">
-    <span>Current tile:</span>
-    <span id="currentTile" class="current-tile">?</span>
-    <span>Turns:</span>
-    <span id="placedCount">0</span> / <span id="totalPlayable">0</span>
   </div>
   <script>
     const SIZE = 7;
@@ -187,15 +320,26 @@
     const INNER_END = SIZE - 2;
     const BIRD_TILE = "🐦";
     let board = [];
-    const natureTiles = ["🌿", "💧", "🌱"];
+    const naturePool = [
+      { tile: "🌿", weight: 0.30 },
+      { tile: "💧", weight: 0.30 },
+      { tile: "🌱", weight: 0.30 },
+      { tile: "🌳", weight: 0.04 },
+      { tile: "🌻", weight: 0.04 },
+      { tile: "🪵", weight: 0.02 },
+    ];
     let currentTile = null;
     let placedCount = 0;
     const totalPlayable = (SIZE - 2) * (SIZE + 2);
     let isAnimating = false;
-    const FLYOVER_STEP_MS = 220;
-    const FLYOVER_FADE_MS = 220;
+    const FLYOVER_STEP_MS = 200;
+    const FLYOVER_FAST_MS = 200;
+    const FLYOVER_FADE_MS = 10;
+    const FEEDBACK_VISIBLE_MS = 600;
+    const FEEDBACK_FADE_MS = 450;
+    const CONSUME_FADE_MS = 300;
     let turnBaseScore = 0;
-    let turnAttachmentCount = 0;
+    let turnInsectCount = 0;
     let turnFinalized = false;
     let totalScore = 0;
     let scoreTransferring = false;
@@ -204,8 +348,8 @@
     const SCORE_TRANSFER_DELAY = 700;
     const SCORE_TRANSFER_DURATION = 900;
 
-    const natureDisplayOrder = ["🌿", "🌱", "💧", "🌳", "🌻", "🪵"];
-    const attachmentDisplayOrder = ["🐟", "🌼", "🍎", "🪷", "🫘", "🕷️", "🦋"];
+    const natureDisplayOrder = ["🌿", "🌱", "💧", "🌳", "🌻", "🪵", "🐟", "🌼", "🍎", "🪷", "🫘", "🍄"];
+    const insectDisplayOrder = ["🕷️", "🦋", "🐌", "🐝", "🐜", "🦂", "🐛"];
 
     const boardEl = document.getElementById("board");
     const currentTileEl = document.getElementById("currentTile");
@@ -213,12 +357,12 @@
     const totalPlayableEl = document.getElementById("totalPlayable");
     totalPlayableEl.textContent = totalPlayable;
     const turnLogEl = document.getElementById("turnLog");
-    const turnFinalEl = document.getElementById("turnFinal");
     const totalScoreEl = document.getElementById("totalScore");
     const flyoverBirdEl = document.createElement("div");
     flyoverBirdEl.className = "flyover-bird";
     flyoverBirdEl.textContent = BIRD_TILE;
     boardEl.appendChild(flyoverBirdEl);
+    ensureTurnDisplayInitialized();
 
     const TILE_POINTS = {
       "": 0,
@@ -233,8 +377,7 @@
       "🍎": 100,
       "🪷": 200,
       "🫘": 200,
-      "🕷️": 300,
-      "🦋": 300,
+      "🍄": 2000,
     };
 
     function initBoard() {
@@ -274,9 +417,19 @@
       if (nextTurn % 6 === 0) {
         currentTile = BIRD_TILE;
       } else {
-        currentTile = natureTiles[Math.floor(Math.random() * natureTiles.length)];
+        currentTile = draftNatureTile();
       }
       currentTileEl.textContent = currentTile;
+    }
+
+    function draftNatureTile() {
+      const roll = Math.random();
+      let cumulative = 0;
+      for (const entry of naturePool) {
+        cumulative += entry.weight;
+        if (roll < cumulative) return entry.tile;
+      }
+      return naturePool[naturePool.length - 1].tile;
     }
 
     function onCellClick(r, c) {
@@ -284,7 +437,7 @@
       if (!canPlaceHere(r, c)) return;
       startTurnScore();
       beginTurn();
-      board[r][c] = createTile(currentTile, { shielded: true, attachmentCooldown: true });
+      board[r][c] = createTile(currentTile);
       updateCell(r, c);
       placedCount++;
       placedCountEl.textContent = placedCount;
@@ -292,7 +445,6 @@
         birdFlyover(r, c);
       } else {
         applyAdjacencyRules(r, c);
-        finalizeTurnScore();
       }
       rollNextTile();
     }
@@ -307,19 +459,27 @@
 
     function updateCell(r, c) {
       const cell = getCellElement(r, c);
+      if (!cell) return;
+      let content = cell.querySelector('.tile-content');
+      if (!content) {
+        content = document.createElement('div');
+        content.className = 'tile-content';
+        cell.innerHTML = '';
+        cell.appendChild(content);
+      }
       const tile = board[r][c];
       if (!tile) {
-        cell.innerHTML = "";
+        content.innerHTML = '';
         return;
       }
-      let html = `<span class="tile-base">${tile.base}</span>`;
+      let html = tile.base ? `<span class="tile-base">${tile.base}</span>` : '';
       if (tile.foodAttachment) {
         html += `<span class="tile-attachment-food">${tile.foodAttachment}</span>`;
       }
       if (tile.insectAttachment) {
         html += `<span class="tile-attachment-insect">${tile.insectAttachment}</span>`;
       }
-      cell.innerHTML = html;
+      content.innerHTML = html;
     }
 
     function neighbors(r, c) {
@@ -413,6 +573,20 @@
         changed = tryAddInsectAttachment(targetTile, "🕷️") || changed;
       } else if (sourceTile.base === "🌻" && targetTile.base === "🌳") {
         changed = tryAddInsectAttachment(targetTile, "🦋") || changed;
+      } else if (sourceTile.base === "🪵" && targetTile.base === "💧") {
+        changed = tryAddInsectAttachment(targetTile, "🐌") || changed;
+      } else if (sourceTile.base === "🪵" && targetTile.base === "🌳") {
+        changed = tryAddInsectAttachment(targetTile, "🐜") || changed;
+      } else if (sourceTile.base === "🪵" && targetTile.base === "🌻") {
+        changed = tryAddInsectAttachment(targetTile, "🐝") || changed;
+      } else if (sourceTile.base === "🪵" && targetTile.base === "🪵") {
+        changed = tryAddFoodAttachment(targetTile, "🍄") || changed;
+      } else if (sourceTile.base === "🌳" && targetTile.base === "🪵") {
+        changed = tryAddInsectAttachment(targetTile, "🦂") || changed;
+      } else if (sourceTile.base === "🌻" && targetTile.base === "🪵") {
+        changed = tryAddInsectAttachment(targetTile, "🐛") || changed;
+      } else if (sourceTile.base === "💧" && targetTile.base === "🪵") {
+        changed = tryAddFoodAttachment(targetTile, "🍄") || changed;
       }
       return changed;
     }
@@ -422,7 +596,7 @@
       if (tile.foodAttachment && tile.foodAttachment === attachment) return false;
       if (tile.foodAttachment) return false;
       tile.foodAttachment = attachment;
-      return true;
+      return applyAttachmentShield(tile);
     }
 
     function tryAddInsectAttachment(tile, attachment) {
@@ -430,6 +604,12 @@
       if (tile.insectAttachment && tile.insectAttachment === attachment) return false;
       if (tile.insectAttachment) return false;
       tile.insectAttachment = attachment;
+      return applyAttachmentShield(tile);
+    }
+
+    function applyAttachmentShield(tile) {
+      tile.attachmentCooldown = true;
+      tile.shielded = true;
       return true;
     }
 
@@ -438,7 +618,7 @@
       while (queue.length) {
         const [cr, cc] = queue.shift();
         const tile = board[cr][cc];
-        if (!tile) continue;
+        if (!tile || tile.shielded) continue;
         neighbors(cr, cc).forEach(([nr, nc]) => {
           const existing = board[nr][nc];
           if (transformNeighbor(tile, existing)) {
@@ -449,7 +629,7 @@
       }
     }
 
-    function birdFlyover(r, c) {
+    async function birdFlyover(r, c) {
       const targets = [];
       if (r === 0) {
         for (let row = INNER_START; row <= INNER_END; row++) targets.push([row, c]);
@@ -464,19 +644,23 @@
         finalizeBirdFlight(r, c);
         return;
       }
-      const path = [[r, c], ...targets];
       isAnimating = true;
       flyoverBirdEl.classList.add("active");
-      path.forEach(([cr, cc], idx) => {
-        setTimeout(() => {
-          moveFlyoverBirdTo(cr, cc);
-          if (idx > 0) fadeOutCell(cr, cc);
-        }, idx * FLYOVER_STEP_MS);
-      });
-      const totalDuration = path.length * FLYOVER_STEP_MS + FLYOVER_FADE_MS;
-      setTimeout(() => {
-        finalizeBirdFlight(r, c);
-      }, totalDuration);
+      board[r][c] = null;
+      updateCell(r, c);
+      moveFlyoverBirdTo(r, c);
+      await wait(FLYOVER_FAST_MS);
+      for (let i = 0; i < targets.length; i++) {
+        const [tr, tc] = targets[i];
+        moveFlyoverBirdTo(tr, tc);
+        const tile = board[tr][tc];
+        const travelTime = tile ? FLYOVER_STEP_MS : FLYOVER_FAST_MS;
+        await wait(travelTime);
+        if (tile) {
+          await fadeOutCell(tr, tc);
+        }
+      }
+      finalizeBirdFlight(r, c);
     }
 
     function finalizeBirdFlight(r, c) {
@@ -499,67 +683,79 @@
     }
 
     function fadeOutCell(r, c) {
-      const cell = getCellElement(r, c);
-      if (!cell || !board[r][c]) return;
-      addTurnScoreFromTile(board[r][c]);
-      cell.classList.add("clearing");
-      setTimeout(() => {
-        board[r][c] = null;
-        updateCell(r, c);
-        cell.classList.remove("clearing");
-      }, FLYOVER_FADE_MS);
+      return new Promise((resolve) => {
+        const cell = getCellElement(r, c);
+        const tile = board[r][c];
+        if (!cell || !tile) {
+          resolve();
+          return;
+        }
+        const { events } = addTurnScoreFromTile(tile);
+        showTileFeedbackSequence(cell, events, tile, r, c).then(() => {
+          const replacement = tile && tile._spawnReplacement ? tile._spawnReplacement : null;
+          cell.classList.add("clearing");
+          setTimeout(() => {
+            board[r][c] = replacement;
+            if (replacement) delete tile._spawnReplacement;
+            updateCell(r, c);
+            cell.classList.remove("clearing");
+            resolve();
+          }, FLYOVER_FADE_MS);
+        });
+      });
     }
 
     function startTurnScore() {
       turnBaseScore = 0;
-      turnAttachmentCount = 0;
+      turnInsectCount = 1;
       turnFinalized = false;
-      turnLogEl.innerHTML = "";
-      turnFinalEl.textContent = "0";
+      ensureTurnDisplayInitialized();
+      const turnPointsEl = document.getElementById("turnPoints");
+      const turnMultiplierEl = document.getElementById("turnMultiplier");
+      const turnResultEl = document.getElementById("turnResult");
+      const natureEl = document.getElementById("turnNature");
+      const itemsEl = document.getElementById("turnItems");
+      if (turnPointsEl) turnPointsEl.textContent = 0;
+      if (turnMultiplierEl) turnMultiplierEl.textContent = 0;
+      if (turnResultEl) {
+        turnResultEl.textContent = "";
+        turnResultEl.style.opacity = 0;
+      }
+      if (natureEl) natureEl.innerHTML = "";
+      if (itemsEl) itemsEl.innerHTML = "";
     }
 
     function addTurnScoreFromTile(tile) {
+      const events = [];
       const base = TILE_POINTS[tile.base] || 0;
-      let attachmentPoints = 0;
-      let newAttachments = 0;
+      if (base > 0) events.push({ type: "points", amount: base, origin: "base", emoji: tile.base });
       if (tile.foodAttachment) {
-        attachmentPoints += TILE_POINTS[tile.foodAttachment] || 0;
-        newAttachments += 1;
+        const foodPoints = TILE_POINTS[tile.foodAttachment] || 0;
+        if (foodPoints > 0) events.push({ type: "points", amount: foodPoints, origin: "food", emoji: tile.foodAttachment });
       }
       if (tile.insectAttachment) {
-        attachmentPoints += TILE_POINTS[tile.insectAttachment] || 0;
-        newAttachments += 1;
+        const insectEvent = getInsectEventData(tile.insectAttachment);
+        if (insectEvent) events.push({ type: "mult", origin: "insect", emoji: tile.insectAttachment, ...insectEvent });
       }
-      const added = base + attachmentPoints;
-      turnBaseScore += added;
-      turnAttachmentCount += newAttachments;
+      events.sort((a, b) => eventPriority(a.origin) - eventPriority(b.origin));
       ensureTurnDisplayInitialized();
-      appendTurnTile(tile);
-      updateTurnFinal();
+      return { events };
     }
 
     function ensureTurnDisplayInitialized() {
       if (document.getElementById("turnPoints")) return;
       turnLogEl.innerHTML = `
+        <div id="turnResult" class="turn-result">0</div>
         <div class="turn-values">
           <span id="turnPoints">0</span>
           <span class="turn-multiply-symbol">×</span>
-          <span id="turnMultiplier">1</span>
+          <span id="turnMultiplier">0</span>
         </div>
         <div id="turnTiles" class="turn-tiles">
           <div class="turn-nature" id="turnNature"></div>
           <div class="turn-items" id="turnItems"></div>
         </div>
       `;
-    }
-
-    function appendTurnTile(tile) {
-      const natureEl = document.getElementById("turnNature");
-      const itemsEl = document.getElementById("turnItems");
-      if (!natureEl || !itemsEl) return;
-      insertEmojiOrdered(natureEl, tile.base, natureDisplayOrder);
-      if (tile.foodAttachment) insertEmojiOrdered(itemsEl, tile.foodAttachment, attachmentDisplayOrder);
-      if (tile.insectAttachment) insertEmojiOrdered(itemsEl, tile.insectAttachment, attachmentDisplayOrder);
     }
 
     function insertEmojiOrdered(container, emoji, order) {
@@ -589,58 +785,221 @@
       return idx === -1 ? order.length : idx;
     }
 
-    function currentMultiplier() {
-      return Math.max(1, turnAttachmentCount || 1);
+    function eventPriority(origin) {
+      if (origin === "food") return 0;
+      if (origin === "insect") return 1;
+      return 2;
     }
 
-    function updateTurnFinal() {
-      const mult = currentMultiplier();
-      const subtotal = turnBaseScore * mult;
+    function getInsectEventData(emoji) {
+      switch (emoji) {
+        case "🕷️":
+          return { amount: 2, label: "+2 mult", mode: "addMult" };
+        case "🦋":
+          return { amount: 3, label: "+3 mult", mode: "addMult" };
+        case "🐌":
+          return { amount: 3, label: "×3 pts", mode: "pointsFactor" };
+        case "🐝":
+          return { amount: 3, label: "×3 mult", mode: "multFactor" };
+        case "🦂":
+          return { amount: 5, label: "×5 mult", mode: "multFactor" };
+        case "🐜":
+        case "🐛":
+          return { amount: 7, label: "+7 mult", mode: "addMult" };
+        default:
+          return null;
+      }
+    }
+
+    function showTileFeedbackSequence(cell, events, tile, r, c) {
+      if (!events || !events.length) return Promise.resolve();
+      return events.reduce((promise, event) => {
+        return promise.then(() =>
+          showTileFeedback(cell, event, () => {
+            appendEventEmoji(event);
+            consumeTilePart(tile, event, r, c);
+          })
+        );
+      }, Promise.resolve());
+    }
+
+    function showTileFeedback(cell, event, onReveal) {
+      return new Promise((resolve) => {
+        const amountValue = resolveEventAmount(event);
+        const bubble = document.createElement("div");
+        bubble.className = "tile-feedback";
+        const label =
+          event.label ||
+          (event.mode === "multFactor"
+            ? `×${amountValue} mult`
+            : event.mode === "pointsFactor"
+            ? `×${amountValue} pts`
+            : event.mode === "addMult" || event.type === "mult"
+            ? `+${amountValue} mult`
+            : `+${amountValue}`);
+        bubble.textContent = label;
+        bubble.dataset.type = event.type;
+        bubble.dataset.amount = amountValue;
+        cell.appendChild(bubble);
+        requestAnimationFrame(() => {
+          bubble.classList.add("visible");
+          if (onReveal) onReveal();
+          applyEventToScore(event, amountValue);
+        });
+        setTimeout(() => {
+          bubble.classList.remove("visible");
+          setTimeout(() => {
+            bubble.remove();
+            resolve();
+          }, FEEDBACK_FADE_MS);
+        }, FEEDBACK_VISIBLE_MS);
+      });
+    }
+
+    function consumeTilePart(tile, event, r, c) {
+      if (!tile) return;
+      const cell = getCellElement(r, c);
+      const content = cell ? cell.querySelector('.tile-content') : null;
+      let selector = '';
+      if (event.origin === "base") {
+        selector = '.tile-base';
+        if (event.emoji === "🌳" && Math.random() < 0.5) {
+          tile._spawnReplacement = createTile("🪵");
+        }
+        tile.base = "";
+      } else if (event.origin === "food") {
+        selector = '.tile-attachment-food';
+        tile.foodAttachment = null;
+      } else if (event.origin === "insect") {
+        selector = '.tile-attachment-insect';
+        tile.insectAttachment = null;
+      }
+      const target = content ? content.querySelector(selector) : null;
+      if (target) {
+        target.classList.add('consuming-piece');
+        setTimeout(() => updateCell(r, c), CONSUME_FADE_MS);
+      } else {
+        updateCell(r, c);
+      }
+    }
+
+    function appendEventEmoji(event) {
+      if (!event || !event.emoji) return;
+      const natureEl = document.getElementById("turnNature");
+      const itemsEl = document.getElementById("turnItems");
+      const container = event.origin === "insect" ? itemsEl : natureEl;
+      if (!container) return;
+      const span = document.createElement("span");
+      span.textContent = event.emoji;
+      container.appendChild(span);
+    }
+
+    function resolveEventAmount(event) {
+      if (!event) return 0;
+      if (typeof event.amountFn === "function") return Math.round(event.amountFn());
+      return event.amount || 0;
+    }
+
+    function applyEventToScore(event, amountValue) {
+      if (!event) return;
+      const amount = amountValue ?? resolveEventAmount(event);
+      if (event.mode === "pointsFactor") {
+        turnBaseScore = Math.round(Math.max(0, turnBaseScore) * amount);
+        bumpElement(document.getElementById("turnPoints"));
+      } else if (event.mode === "multFactor") {
+        turnInsectCount = Math.max(1, turnInsectCount) * amount;
+        bumpElement(document.getElementById("turnMultiplier"));
+      } else if (event.mode === "addMult" || event.type === "mult") {
+        turnInsectCount += amount;
+        bumpElement(document.getElementById("turnMultiplier"));
+      } else if (event.type === "points") {
+        turnBaseScore += amount;
+        bumpElement(document.getElementById("turnPoints"));
+      }
+      updateTurnFinal({ maskMultiplier: false });
+    }
+
+    function bumpElement(el) {
+      if (!el) return;
+      el.classList.remove("score-bump");
+      void el.offsetWidth;
+      el.classList.add("score-bump");
+    }
+
+    function currentMultiplier() {
+      return Math.max(1, turnInsectCount || 1);
+    }
+
+    function updateTurnFinal({ maskMultiplier = false } = {}) {
+      const rawMult = currentMultiplier();
+      const displayMult = maskMultiplier ? 0 : rawMult;
+      const subtotal = turnBaseScore * rawMult;
       const turnPointsEl = document.getElementById("turnPoints");
       const turnMultiplierEl = document.getElementById("turnMultiplier");
       if (turnPointsEl) turnPointsEl.textContent = turnBaseScore;
-      if (turnMultiplierEl) turnMultiplierEl.textContent = mult;
-      turnFinalEl.textContent = subtotal;
+      if (turnMultiplierEl) turnMultiplierEl.textContent = displayMult;
     }
 
     function finalizeTurnScore() {
       if (turnFinalized) return;
       turnFinalized = true;
-      updateTurnFinal();
-      const finalScore = parseInt(turnFinalEl.textContent, 10) || 0;
-      beginScoreTransfer(finalScore);
+      ensureTurnDisplayInitialized();
+      const finalScore = turnBaseScore * currentMultiplier();
+      const turnPointsEl = document.getElementById("turnPoints");
+      const turnMultiplierEl = document.getElementById("turnMultiplier");
+      const turnResultEl = document.getElementById("turnResult");
+      if (turnPointsEl) turnPointsEl.textContent = 0;
+      if (turnMultiplierEl) turnMultiplierEl.textContent = 0;
+      const showResultThenTransfer = () => {
+        if (turnResultEl) {
+          turnResultEl.textContent = `${finalScore}`;
+          turnResultEl.style.opacity = 1;
+          bumpElement(turnResultEl);
+        }
+        beginScoreTransfer(finalScore).then(clearTurnTileEmojis);
+      };
+      showResultThenTransfer();
     }
 
     function beginScoreTransfer(amount) {
       cancelScoreTransferAnimation();
+      const turnResultEl = document.getElementById("turnResult");
       if (amount <= 0) {
-        turnFinalEl.textContent = "0";
+        if (turnResultEl) {
+          turnResultEl.textContent = 0;
+          turnResultEl.style.opacity = 0;
+        }
         scoreTransferring = false;
-        return;
+        return Promise.resolve();
       }
       scoreTransferring = true;
       const startTotal = totalScore;
       const startAmount = amount;
-      scoreTransferTimer = setTimeout(() => {
-        const startTime = performance.now();
-        const step = (now) => {
-          const progress = Math.min(1, (now - startTime) / SCORE_TRANSFER_DURATION);
-          const remaining = Math.max(0, Math.round(startAmount * (1 - progress)));
-          const gained = startAmount - remaining;
-          turnFinalEl.textContent = remaining;
-          totalScoreEl.textContent = startTotal + gained;
-          if (progress < 1) {
-            scoreTransferFrame = requestAnimationFrame(step);
-          } else {
-            totalScore = startTotal + startAmount;
-            turnFinalEl.textContent = "0";
-            totalScoreEl.textContent = totalScore;
-            scoreTransferring = false;
-            scoreTransferFrame = null;
-          }
-        };
-        scoreTransferFrame = requestAnimationFrame(step);
-      }, SCORE_TRANSFER_DELAY);
+      return new Promise((resolve) => {
+        scoreTransferTimer = setTimeout(() => {
+          const startTime = performance.now();
+          const step = (now) => {
+            const progress = Math.min(1, (now - startTime) / SCORE_TRANSFER_DURATION);
+            const gained = Math.round(startAmount * progress);
+            totalScoreEl.textContent = startTotal + gained;
+            if (turnResultEl) turnResultEl.textContent = Math.max(0, startAmount - gained);
+            if (progress < 1) {
+              scoreTransferFrame = requestAnimationFrame(step);
+            } else {
+              totalScore = startTotal + startAmount;
+              totalScoreEl.textContent = totalScore;
+              if (turnResultEl) {
+                turnResultEl.textContent = 0;
+                turnResultEl.style.opacity = 0;
+              }
+              scoreTransferring = false;
+              scoreTransferFrame = null;
+              resolve();
+            }
+          };
+          scoreTransferFrame = requestAnimationFrame(step);
+        }, SCORE_TRANSFER_DELAY);
+      });
     }
 
     function cancelScoreTransferAnimation() {
@@ -653,6 +1012,28 @@
         scoreTransferFrame = null;
       }
       scoreTransferring = false;
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function clearTurnTileEmojis() {
+      const itemsEl = document.getElementById("turnItems");
+      const natureEl = document.getElementById("turnNature");
+      const sequence = [
+        ...(itemsEl ? Array.from(itemsEl.querySelectorAll("span")).reverse() : []),
+        ...(natureEl ? Array.from(natureEl.querySelectorAll("span")).reverse() : []),
+      ];
+      return sequence.reduce((promise, span) => {
+        return promise.then(() => new Promise((resolve) => {
+          span.classList.add("calc-consuming");
+          setTimeout(() => {
+            span.remove();
+            resolve();
+          }, 160);
+        }));
+      }, Promise.resolve());
     }
 
     initBoard();
