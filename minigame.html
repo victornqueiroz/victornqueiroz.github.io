@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1-Button Snatch</title>
+  <style>
+    :root{
+      --w: 540px;
+      --h: 520px;
+    }
+    body{
+      font-family: "Courier New", "Lucida Console", Monaco, monospace;
+      background:
+        repeating-linear-gradient(0deg, #ffffff, #ffffff 6px, #f6f6f6 6px, #f6f6f6 12px);
+      color:#111111;
+      margin:0;
+      display:flex;
+      min-height:100vh;
+      align-items:center;
+      justify-content:center;
+    }
+    .wrap{
+      width:min(var(--w), 94vw);
+      padding:22px;
+      border:3px solid #111111;
+      border-radius:0;
+      background:#ffffff;
+      box-shadow: 6px 6px 0 #111111;
+    }
+    h1{ margin:0 0 10px; font-size:20px; font-weight:650; }
+    .hud{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+    }
+    .pill{
+      padding:8px 12px;
+      border-radius:0;
+      background:#ffffff;
+      border:2px solid #111111;
+      font-size:13px;
+    }
+    .barArea{
+      position:relative;
+      width:100%;
+      height:var(--h);
+      border-radius:0;
+      background:#ffffff;
+      border:2px solid #111111;
+      overflow:hidden;
+    }
+    .barRow{
+      display:flex;
+      gap:16px;
+      align-items:flex-end;
+    }
+    .sprite{
+      width:320px;
+      height:auto;
+      align-self:flex-end;
+      image-rendering: pixelated;
+    }
+    /* The timing track */
+    .track{
+      position:absolute;
+      top:5%;
+      bottom:5%;
+      left:50%;
+      width:14px;
+      transform:translateX(-50%);
+      border-radius:0;
+      background:#ffffff;
+      border:2px solid #111111;
+      overflow:hidden;
+    }
+    .fill{
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:100%;
+      height:0%;
+      background:#d94b3d;
+      z-index: 3;
+    }
+    /* Green zone at the top (90-100% of the track) */
+    .target{
+      position:absolute;
+      top:5%;
+      left:50%;
+      width:26px;
+      height:9%;
+      transform:translateX(-50%);
+      border-radius:0;
+      background:#6eea7f;
+      border:2px solid #111111;
+      box-shadow:none;
+      z-index:2;
+    }
+    /* Yellow zone below (70-90% of the track) */
+    .targetYellow{
+      position:absolute;
+      top:14%;
+      left:50%;
+      width:26px;
+      height:18%;
+      transform:translateX(-50%);
+      border-radius:0;
+      background:#f2cf4a;
+      border:2px solid #111111;
+      box-shadow:none;
+      z-index:1;
+    }
+    /* Cursor */
+    .cursor{
+      position:absolute;
+      left:50%;
+      width:40px;
+      height:10px;
+      transform:translate(-50%,-50%);
+      border-radius:0;
+      background:#111111;
+      box-shadow:none;
+      z-index: 4;
+    }
+    .hitPct{
+      position:absolute;
+      left:calc(50% + 28px);
+      transform:translateY(-50%);
+      font-size:12px;
+      padding:2px 6px;
+      border-radius:0;
+      border:2px solid #111111;
+      background:#ffffff;
+      display:none;
+      min-width: 36px;
+      text-align: center;
+      white-space: nowrap;
+      z-index: 5;
+    }
+    .msg{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:0;
+      border:2px solid #111111;
+      background:#ffffff;
+      line-height:1.35;
+      font-size:14px;
+      min-height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .msg strong{ font-weight:700; }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      padding:2px 6px;
+      border-radius:0;
+      background:#ffffff;
+      border:2px solid #111111;
+      white-space:nowrap;
+    }
+    .progress{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      opacity:.92;
+      font-size:13px;
+    }
+    .controls{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      font-size:13px;
+    }
+    .controls input[type="range"]{ width:180px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hud">
+      <h1>1-Button Snatch</h1>
+      <div class="pill">Press <span class="kbd">Space</span> to lock in · <span class="kbd">R</span> restart</div>
+    </div>
+
+    <div class="barRow">
+      <div class="barArea" id="barArea">
+        <div class="track">
+          <div class="fill" id="fill"></div>
+        </div>
+        <div class="targetYellow" id="targetYellow"></div>
+        <div class="target" id="target"></div>
+        <div class="cursor" id="cursor"></div>
+        <div class="hitPct" id="hitPct">0%</div>
+      </div>
+      <img class="sprite" id="sprite" src="cj021.png" alt="Lifter sprite" />
+    </div>
+
+    <div class="progress">
+      <span>Attempt:</span> <span id="attempt">0/3</span>
+      <span style="margin-left:10px;">Streak:</span> <span id="streak">0</span>
+      <span style="margin-left:10px;">Pressure:</span> <span id="pressure">0</span>
+    </div>
+
+    <div class="controls">
+      <label>Weight</label>
+      <input id="weight" type="range" min="10" max="80" value="30" />
+      <span id="weightVal">30kg</span>
+    </div>
+
+    <div class="msg" id="msg">
+      <div>
+        Press <strong>Space</strong> to start, press again to stop in the green zone.
+      </div>
+      <div class="kbd">Space</div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const cursor = document.getElementById("cursor");
+      const target = document.getElementById("target");
+      const targetYellow = document.getElementById("targetYellow");
+      const track = document.querySelector(".track");
+      const fill = document.getElementById("fill");
+      const hitPct = document.getElementById("hitPct");
+      const sprite = document.getElementById("sprite");
+      const barArea = document.getElementById("barArea");
+      const weightInput = document.getElementById("weight");
+      const weightVal = document.getElementById("weightVal");
+
+      const msg = document.getElementById("msg");
+      const attemptEl = document.getElementById("attempt");
+      const streakEl = document.getElementById("streak");
+      const pressureEl = document.getElementById("pressure");
+
+      // Game state
+      const maxAttempts = 3;
+      let attemptsUsed = 0;
+      let streak = 0;
+      let running = false;
+      let bestPlace = 0; // 0 = none, 3 = 3rd, 2 = 2nd, 1 = 1st
+      let pressure = 0;
+      let dropping = false;
+
+      // Cursor motion
+      let t = 0;
+      let lastTs = null;
+      let speedFactor = 1;
+
+      // Fill speed (base, accelerates exponentially), gets faster with streak, weight, and pressure
+      function getSpeed() {
+        const base = 1.15;
+        const bonus = Math.min(0.6, streak * 0.06);
+        const weight = Number(weightInput.value) || 30;
+        const weightFactor = Math.max(0.6, weight / 30);
+        const pressureFactor = Math.pow(1.4, pressure);
+        return (base + bonus) * weightFactor * pressureFactor;
+      }
+
+      // Helpers for geometry (within the barArea)
+      function getTrackBounds() {
+        const rect = track.getBoundingClientRect();
+        const areaRect = barArea.getBoundingClientRect();
+        return {
+          top: rect.top - areaRect.top,
+          bottom: rect.bottom - areaRect.top,
+          height: rect.height,
+        };
+      }
+
+      function setCursorY(y) {
+        cursor.style.top = `${y}px`;
+      }
+
+      function setFillLevel(level) {
+        const clamped = Math.max(0, Math.min(1, level));
+        fill.style.height = `${clamped * 100}%`;
+      }
+
+      function setHitPct(value, y, show) {
+        hitPct.textContent = `${Math.round(value)}%`;
+        hitPct.style.top = `${y}px`;
+        hitPct.style.display = show ? "block" : "none";
+      }
+
+      // Return how close to center (0..1), and whether inside target zone
+      function evalTiming() {
+        const pct = t * 100;
+        const zone = pct >= 90 ? "green" : (pct >= 70 ? "yellow" : "none");
+        const closeness = Math.max(0, Math.min(1, (pct - 70) / 30));
+        return { zone, closeness };
+      }
+
+      function setMsg(text, rightTag = "Space") {
+        msg.innerHTML = `<div>${text}</div><div class="kbd">${rightTag}</div>`;
+      }
+
+      function hardReset() {
+        attemptsUsed = 0;
+        streak = 0;
+        running = false;
+        t = 0;
+        dropping = false;
+        lastTs = null;
+        bestPlace = 0;
+        pressure = 0;
+        attemptEl.textContent = `${attemptsUsed}/${maxAttempts}`;
+        streakEl.textContent = streak;
+        pressureEl.textContent = pressure;
+        setFillLevel(0);
+        const bounds = getTrackBounds();
+        setCursorY(bounds.bottom);
+        setHitPct(0, bounds.bottom, false);
+        sprite.src = "cj021.png";
+        weightVal.textContent = `${weightInput.value}kg`;
+        setMsg('Press <strong>Space</strong> to start, press again to stop in the green zone.', "Space");
+      }
+
+      function getPlace(weight) {
+        if (weight >= 75) return 1;
+        if (weight >= 50) return 2;
+        return 3;
+      }
+
+      function placeLabel(place) {
+        if (place === 1) return "1st place";
+        if (place === 2) return "2nd place";
+        if (place === 3) return "3rd place";
+        return "No qualification";
+      }
+
+      function endIfNoAttempts() {
+        if (attemptsUsed >= maxAttempts) {
+          running = false;
+          const finalLabel = bestPlace ? placeLabel(bestPlace) : "No qualification";
+          setMsg(`<strong>Attempts complete.</strong> ${finalLabel}. Press <strong>R</strong> to reset.`, "R");
+          return true;
+        }
+        return false;
+      }
+
+      function failLift() {
+        running = false;
+        streak = 0;
+        streakEl.textContent = streak;
+        pressure = Math.max(0, pressure + 1);
+        pressureEl.textContent = pressure;
+        sprite.src = "cj031.png";
+        attemptsUsed++;
+        attemptEl.textContent = `${attemptsUsed}/${maxAttempts}`;
+        if (endIfNoAttempts()) return;
+        setMsg(`<strong>Miss!</strong> You failed the snatch. Press <strong>Space</strong> to try again.`, "Space");
+      }
+
+      function winLift(qualityLabel, zone) {
+        running = false;
+        streak++;
+        streakEl.textContent = streak;
+        pressure = Math.max(0, pressure - 1);
+        pressureEl.textContent = pressure;
+        sprite.src = zone === "yellow" ? "cj041.png" : "cj011.png";
+        attemptsUsed++;
+        attemptEl.textContent = `${attemptsUsed}/${maxAttempts}`;
+        const weight = Number(weightInput.value) || 30;
+        const place = getPlace(weight);
+        if (bestPlace === 0 || place < bestPlace) bestPlace = place;
+        if (endIfNoAttempts()) return;
+        setMsg(`<strong>Good lift!</strong> ${qualityLabel} — ${placeLabel(place)}. Press <strong>Space</strong> to try again or <strong>R</strong> to reset.`, "Space");
+      }
+
+      // Determine a feel-good rating from closeness
+      function ratingFromCloseness(c) {
+        if (c > 0.92) return "Perfect timing";
+        if (c > 0.80) return "Great timing";
+        if (c > 0.68) return "Good timing";
+        return "Just barely";
+      }
+
+      function nextAttempt() {
+        if (attemptsUsed >= maxAttempts) {
+          endIfNoAttempts();
+          return;
+        }
+        running = false;
+        t = 0;
+        dropping = false;
+        setFillLevel(0);
+        const bounds = getTrackBounds();
+        setCursorY(bounds.bottom);
+        setHitPct(0, bounds.bottom, false);
+        sprite.src = "cj021.png";
+        weightVal.textContent = `${weightInput.value}kg`;
+        setMsg('Press <strong>Space</strong> to start, press again to stop in the green zone.', "Space");
+      }
+
+      // Input
+      weightInput.addEventListener("input", () => {
+        weightVal.textContent = `${weightInput.value}kg`;
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "KeyR") {
+          hardReset();
+          return;
+        }
+
+        if (e.code !== "Space") return;
+        e.preventDefault();
+
+        // If not running (after a win), Space begins next attempt
+        if (!running && t === 0) {
+          if (attemptsUsed >= maxAttempts) {
+            endIfNoAttempts();
+            return;
+          }
+          running = true;
+          speedFactor = 0.8 + Math.random() * 0.4;
+          t = 0;
+          dropping = false;
+          setHitPct(0, 0, false);
+          setMsg('Release with <strong>Space</strong> to lock the snatch.', "Space");
+          return;
+        }
+
+        if (!running && t > 0) {
+          nextAttempt();
+          return;
+        }
+
+        if (running) {
+          running = false;
+          const { zone, closeness } = evalTiming();
+          const bounds = getTrackBounds();
+          const y = bounds.bottom - (bounds.height * t);
+          setHitPct(t * 100, y, true);
+
+          if (zone === "none") {
+            failLift();
+            return;
+          }
+
+          // success
+          const quality = ratingFromCloseness(closeness);
+          const zoneLabel = zone === "green" ? "Green zone" : "Yellow zone (caution)";
+          winLift(`${quality} — ${zoneLabel}`, zone);
+        }
+      });
+
+      // Animation loop: ping-pong cursor across track bounds
+      function frame() {
+        const bounds = getTrackBounds();
+        const speed = getSpeed();
+
+        if (running) {
+          const now = performance.now();
+          const dt = lastTs ? (now - lastTs) / 1000 : 0;
+          lastTs = now;
+          if (dropping) {
+            const dropSpeed = speed * speedFactor * 3.5;
+            t = t - dt * dropSpeed;
+            if (t <= 0) {
+              t = 0;
+              dropping = false;
+            }
+          } else {
+            // Slow start then very fast to the top (monotonic sawtooth)
+            const slowPortion = 0.4;
+            const k = 5.2;
+            let accel;
+            if (t < slowPortion) {
+              const p = t / slowPortion;
+              accel = 0.35 + 0.65 * (0.5 - 0.5 * Math.cos(p * Math.PI));
+            } else {
+              const p = (t - slowPortion) / (1 - slowPortion);
+              accel = 0.8 + 2.6 * (1 - Math.exp(-k * p)) / (1 - Math.exp(-k));
+            }
+            t = t + dt * speed * speedFactor * accel;
+            if (t >= 1) {
+              t = 1;
+              dropping = true;
+            }
+          }
+          setFillLevel(t);
+          const y = bounds.bottom - (bounds.height * t);
+          setCursorY(y);
+        } else {
+          lastTs = null;
+        }
+
+        requestAnimationFrame(frame);
+      }
+
+      // Initialize
+      hardReset();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
