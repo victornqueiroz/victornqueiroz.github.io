@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weightlifting Deckbattle (Text Prototype)</title>
+  <style>
+    body {
+      font-family: "Courier New", "Lucida Console", Monaco, monospace;
+      background:
+        repeating-linear-gradient(0deg, #ffffff, #ffffff 6px, #f6f6f6 6px, #f6f6f6 12px);
+      color:#111111;
+      padding:18px;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    .layout { display:flex; gap:16px; align-items:stretch; }
+    .panel { border:3px solid #111111; border-radius:0; padding:16px; background:#ffffff; box-shadow: 6px 6px 0 #111111; }
+    .panel.main { width: 820px; min-height: 620px; flex: 0 0 auto; }
+    .panel.logPanel { width: 240px; display:flex; flex-direction:column; }
+    pre { margin:0; white-space: pre; overflow:auto; line-height:1.25; font-size: 15px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+    .arena { display:flex; justify-content:space-between; align-items:flex-end; margin-top:12px; gap:8px; }
+    .arena img { width: 300px; height: auto; image-rendering: pixelated; }
+    .hpWrap { width: 300px; }
+    .hpBar { height: 10px; border:2px solid #111111; border-radius:0; background:#ffffff; overflow:hidden; margin-bottom:6px; position:relative; }
+    .hpFill { height:100%; width:0%; background:#d94b3d; }
+    .hpFill.enemy { background:#2f6ee5; }
+    .hpLabel { font-size: 11px; margin-bottom:4px; }
+    button {
+      border:2px solid #111111; background:#ffffff; color:#111111;
+      padding:10px 12px; border-radius:0; cursor:pointer;
+      box-shadow: 2px 2px 0 #111111;
+    }
+    button:hover { background:#f6f6f6; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .hand { display:flex; gap:8px; flex-direction:row; flex-wrap:nowrap; align-items:flex-start; margin-top:12px; padding-bottom:6px; overflow:visible; }
+    .card {
+      border:2px solid #111111; background:#ffffff;
+      border-radius:0; padding:8px 8px; min-width: 0; font-size: 14px;
+      cursor:pointer; user-select:none; flex: 0 0 calc(((100% - 40px) / 5) * 0.8);
+      aspect-ratio: 1 / 1;
+      box-shadow: 2px 2px 0 #111111;
+    }
+    .card:hover { background:#f6f6f6; }
+    .card small { opacity:.8; display:block; margin-top:6px; }
+    .log { font-size: 10px; margin-top:0; flex:1 1 auto; overflow:auto; padding:10px; border:2px solid #111111; border-radius:0; background:#ffffff; }
+    .log div { margin: 4px 0; opacity:.95; }
+    .hint { opacity:.8; font-size: 12px; margin-top:8px; }
+    .badge { display:inline-block; padding:2px 8px; border:2px solid #111111; border-radius:0; margin-left:8px; opacity:.9; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="layout">
+    <div class="panel main">
+      <pre id="ui"></pre>
+      <div class="arena">
+        <div class="hpWrap">
+          <div class="hpLabel" id="playerHpLabel">0 / 0</div>
+          <div class="hpBar"><div class="hpFill" id="playerHp"></div></div>
+          <img id="playerSprite" src="cj021.png" alt="Player lifter" />
+        </div>
+        <div class="hpWrap">
+          <div class="hpLabel" id="enemyHpLabel">0 / 0</div>
+          <div class="hpBar"><div class="hpFill enemy" id="enemyHp"></div></div>
+          <img id="enemySprite" src="enemy02.png" alt="Alien monster" />
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnDraw" title="Draw up to 5 (if you ever need manual draw)">Draw</button>
+        <button id="btnEnd">End Turn</button>
+        <button id="btnNew">New Battle</button>
+        <span class="badge" id="status"></span>
+      </div>
+
+      <div class="hand" id="hand"></div>
+
+      <div class="hint">
+        Play 3 turns of cards, then the lift is performed. Reach the target total weight to win.
+      </div>
+    </div>
+
+    <div class="panel logPanel">
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * Minimal text-only prototype of a 3-turn lift cycle.
+ * Cards:
+ * - Add Plate (1): +1 plate (adds weight to future lifts)
+ * - Brace (1): +6 stability
+ * - Explosive Drive (1): Next lift +20 kg
+ * - Reset (1): Remove 1 bad effect
+ */
+
+const CARDS = {
+  ADD_WHITE: { id:"ADD_WHITE", name:"Add Plate (White)", cost:1, text:"Add +5kg plate.", kind:"plate" },
+  ADD_GREEN: { id:"ADD_GREEN", name:"Add Plate (Green)", cost:1, text:"Add +10kg plate.", kind:"plate" },
+  ADD_BLUE: { id:"ADD_BLUE", name:"Add Plate (Blue)", cost:1, text:"Add +20kg plate.", kind:"plate" },
+  ADD_RED: { id:"ADD_RED", name:"Add Plate (Red)", cost:1, text:"Add +25kg plate.", kind:"plate" },
+  SNATCH: { id:"SNATCH", name:"Snatch", cost:1, text:"Next lift adds Guard.", kind:"attack" },
+  CLEAN_JERK: { id:"CLEAN_JERK", name:"Clean & Jerk", cost:1, text:"Next lift attacks the enemy.", kind:"attack" },
+  BRACE: { id:"BRACE", name:"Brace", cost:1, text:"Gain +6 Stability.", kind:"defense" },
+  EXPLOSIVE_DRIVE: { id:"EXPLOSIVE_DRIVE", name:"Explosive Drive", cost:1, text:"Next lift +20 kg.", kind:"lift" },
+  RESET: { id:"RESET", name:"Reset", cost:1, text:"Remove 1 bad effect.", kind:"cleanse" },
+};
+
+function makeStarterDeck(){
+  // 12 cards: 4 plate cards (one of each), 1 snatch, 1 clean & jerk, 3 brace, 2 explosive drive, 1 reset
+  const deck = [];
+  deck.push({...CARDS.ADD_WHITE});
+  deck.push({...CARDS.ADD_GREEN});
+  deck.push({...CARDS.ADD_BLUE});
+  deck.push({...CARDS.ADD_RED});
+  deck.push({...CARDS.SNATCH});
+  deck.push({...CARDS.CLEAN_JERK});
+  for (let i=0;i<3;i++) deck.push({...CARDS.BRACE});
+  for (let i=0;i<2;i++) deck.push({...CARDS.EXPLOSIVE_DRIVE});
+  deck.push({...CARDS.RESET});
+  return deck;
+}
+
+function shuffle(arr){
+  for (let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+const state = {
+  // Player
+  stability: 0,
+  breathMax: 3,
+  breath: 3,
+
+  // Barbell
+  baseWeight: 20,
+  plates: [],
+  liftBonus: 0,
+  attackMode: "snatch",
+
+  // Total (win condition)
+  totalLifted: 0,
+  targetTotal: 200,
+  enemyTotal: 0,
+  enemyTarget: 200,
+  enemyPerCycle: 70,
+  guard: 0,
+
+  // Deck system
+  drawPile: [],
+  discardPile: [],
+  hand: [],
+
+  // Turn cycle
+  turn: 1,
+  turnInCycle: 1,
+
+  // Bad effects
+  badEffects: 0,
+
+  // Status
+  ended: false,
+};
+
+const elUI = document.getElementById("ui");
+const elHand = document.getElementById("hand");
+const elLog = document.getElementById("log");
+const elStatus = document.getElementById("status");
+const elPlayerSprite = document.getElementById("playerSprite");
+const elEnemySprite = document.getElementById("enemySprite");
+const elPlayerHp = document.getElementById("playerHp");
+const elEnemyHp = document.getElementById("enemyHp");
+const elPlayerHpLabel = document.getElementById("playerHpLabel");
+const elEnemyHpLabel = document.getElementById("enemyHpLabel");
+
+function log(msg){
+  const div = document.createElement("div");
+  div.textContent = msg;
+  elLog.appendChild(div);
+  elLog.scrollTop = elLog.scrollHeight;
+}
+
+function resetBattle(){
+  // reset numbers
+  state.stability = 0;
+  state.breath = state.breathMax;
+  state.plates = [];
+  state.liftBonus = 0;
+  state.totalLifted = 0;
+  state.enemyTotal = 0;
+  state.enemyPerCycle = 70;
+  state.guard = 0;
+  state.attackMode = "snatch";
+  state.turn = 1;
+  state.turnInCycle = 1;
+  state.badEffects = 0;
+  state.ended = false;
+
+  // reset deck
+  state.drawPile = shuffle(makeStarterDeck());
+  state.discardPile = [];
+  state.hand = [];
+
+  elLog.innerHTML = "";
+  elPlayerSprite.src = "cj021.png";
+  elEnemySprite.src = "enemy02.png";
+  log("New battle started.");
+  startPlayerTurn(true);
+  render();
+}
+
+function plateToken(plate){
+  if (plate.name === "White") return "⚪️";
+  if (plate.name === "Green") return "🟢";
+  if (plate.name === "Blue") return "🔵";
+  if (plate.name === "Red") return "🔴";
+  return "•";
+}
+
+function plateTokens(plates){
+  if (!plates.length) return "(none)";
+  const order = ["White", "Green", "Blue", "Red"];
+  const counts = { Red:0, Blue:0, Green:0, White:0 };
+  plates.forEach((plate) => { counts[plate.name] = (counts[plate.name] || 0) + 1; });
+  const tokens = [];
+  order.forEach((name) => {
+    for (let i=0;i<counts[name];i++) tokens.push(plateToken({ name }));
+  });
+  const show = tokens.slice(0, 12);
+  const extra = tokens.length > 12 ? `+${tokens.length - 12}` : "";
+  const left = show.join("");
+  const right = show.slice().reverse().join("");
+  return `${left}======${right}${extra}`;
+}
+
+function totalPlateWeight(plates){
+  return plates.reduce((sum, plate) => sum + plate.kg, 0);
+}
+
+function breathDots(){
+  return "●".repeat(state.breath) + "○".repeat(Math.max(0, state.breathMax - state.breath));
+}
+
+function render(){
+  const barPlateWeight = totalPlateWeight(state.plates);
+  const barWeight = state.baseWeight + barPlateWeight;
+  const requiredStability = 12 + Math.floor(barWeight / 20);
+  const stabilityChance = Math.min(1, state.stability / requiredStability);
+  const liftPct = Math.min(1, state.totalLifted / state.targetTotal);
+  const enemyPct = Math.min(1, state.enemyTotal / state.enemyTarget);
+
+  const ui = [
+`LIFT CYCLE | Turn ${state.turn} | Phase ${state.turnInCycle}/3
+BARBELL | Base ${state.baseWeight}kg | Plates ${state.plates.length} (${barPlateWeight}kg) ${plateTokens(state.plates)} | Current ${barWeight}kg
+PLAYER | Stability ${state.stability}/${requiredStability} (${Math.round(stabilityChance * 100)}%) | Breath ${breathDots()} | Bonus +${state.liftBonus}kg | Guard ${state.guard} | Lift ${state.attackMode === "snatch" ? "Snatch" : "Clean & Jerk"}
+`
+  ].join("\n");
+
+  elUI.textContent = ui;
+  const pct = `${Math.round(liftPct * 100)}%`;
+  const enemyPctText = `${Math.round(enemyPct * 100)}%`;
+  elPlayerHp.style.width = pct;
+  elEnemyHp.style.width = enemyPctText;
+  elPlayerHpLabel.textContent = `${state.totalLifted} / ${state.targetTotal}`;
+  elEnemyHpLabel.textContent = `${state.enemyTotal} / ${state.enemyTarget}`;
+
+  // status badge
+  if (state.ended){
+    if (state.enemyTotal >= state.enemyTarget) elStatus.textContent = "VICTORY";
+    else elStatus.textContent = "ENDED";
+  } else {
+    elStatus.textContent = `Turn ${state.turn}`;
+  }
+
+  // render hand as clickable cards
+  elHand.innerHTML = "";
+  state.hand.forEach((card, i) => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `<b>${card.name}</b> <span class="badge">Cost ${card.cost}</span><small>${card.text}</small>`;
+    div.addEventListener("click", () => playCard(i));
+    // disable feel
+    if (state.ended || card.cost > state.breath) div.style.opacity = "0.5";
+    elHand.appendChild(div);
+  });
+
+  // buttons
+  document.getElementById("btnEnd").disabled = state.ended;
+  document.getElementById("btnDraw").disabled = state.ended;
+}
+
+function reshuffleIfNeeded(){
+  if (state.drawPile.length === 0){
+    if (state.discardPile.length === 0) return;
+    state.drawPile = shuffle(state.discardPile);
+    state.discardPile = [];
+    log("Reshuffled discard into draw pile.");
+  }
+}
+
+function draw(n){
+  for (let i=0;i<n;i++){
+    reshuffleIfNeeded();
+    if (state.drawPile.length === 0) return;
+    state.hand.push(state.drawPile.pop());
+  }
+}
+
+function startPlayerTurn(first=false){
+  state.breath = state.breathMax;
+  if (!first) log(`— Turn ${state.turn} (Phase ${state.turnInCycle}/3) —`);
+  // draw up to 5
+  while (state.hand.length < 5) draw(1);
+}
+
+function discardHand(){
+  state.discardPile.push(...state.hand);
+  state.hand = [];
+}
+
+function performLift(){
+  const barPlateWeight = totalPlateWeight(state.plates);
+  const barWeight = state.baseWeight + barPlateWeight;
+  const requiredStability = 12 + Math.floor(barWeight / 20);
+  const stabilityChance = Math.min(1, state.stability / requiredStability);
+  const roll = Math.random();
+  if (roll > stabilityChance){
+    log(`Lift failed: ${Math.round(stabilityChance * 100)}% chance (rolled ${roll.toFixed(2)}).`);
+    elPlayerSprite.src = "cj031.png";
+    state.stability = 0;
+    setTimeout(() => {
+      elPlayerSprite.src = "cj021.png";
+      elEnemySprite.src = "enemy02.png";
+    }, 2000);
+    return;
+  }
+  const liftWeight = barWeight + state.liftBonus;
+  if (state.attackMode === "snatch"){
+    state.guard += liftWeight;
+    log(`Snatch: +${liftWeight} Guard (bar ${barWeight}kg + bonus ${state.liftBonus}kg). Roll ${roll.toFixed(2)}.`);
+    elPlayerSprite.src = "snatch011.png";
+  } else {
+    state.enemyTotal += liftWeight;
+    log(`Clean & Jerk: +${liftWeight}kg to enemy bar (bar ${barWeight}kg + bonus ${state.liftBonus}kg). Roll ${roll.toFixed(2)}.`);
+    elPlayerSprite.src = "cj011.png";
+  }
+  elEnemySprite.src = "enemy01.png";
+  state.liftBonus = 0;
+  state.plates = [];
+  state.stability = 0;
+  checkVictory();
+  setTimeout(() => {
+    elPlayerSprite.src = "cj021.png";
+    elEnemySprite.src = "enemy02.png";
+  }, 2000);
+}
+
+function checkVictory(){
+  if (state.enemyTotal >= state.enemyTarget && !state.ended){
+    state.ended = true;
+    log("Enemy bar filled. Victory!");
+    render();
+  }
+}
+
+function checkDefeat(){
+  if (state.totalLifted >= state.targetTotal && !state.ended){
+    state.ended = true;
+    log("The alien overwhelms the arena. Defeat.");
+    render();
+  }
+}
+
+function playCard(handIndex){
+  if (state.ended) return;
+  const card = state.hand[handIndex];
+  if (!card) return;
+  if (card.cost > state.breath) return;
+
+  // pay cost
+  state.breath -= card.cost;
+
+  // resolve
+  if (card.id === "ADD_WHITE"){
+    state.plates.push({ name:"White", kg:5 });
+    log("Add Plate: +1 White plate (5kg).");
+  }
+
+  if (card.id === "ADD_GREEN"){
+    state.plates.push({ name:"Green", kg:10 });
+    log("Add Plate: +1 Green plate (10kg).");
+  }
+
+  if (card.id === "ADD_BLUE"){
+    state.plates.push({ name:"Blue", kg:20 });
+    log("Add Plate: +1 Blue plate (20kg).");
+  }
+
+  if (card.id === "ADD_RED"){
+    state.plates.push({ name:"Red", kg:25 });
+    log("Add Plate: +1 Red plate (25kg).");
+  }
+  if (card.id === "SNATCH"){
+    state.attackMode = "snatch";
+    log("Snatch queued: next lift adds Guard.");
+  }
+
+  if (card.id === "CLEAN_JERK"){
+    state.attackMode = "clean_jerk";
+    log("Clean & Jerk queued: next lift attacks the enemy.");
+  }
+
+  if (card.id === "BRACE"){
+    state.stability += 6;
+    log("Brace: +6 stability.");
+  }
+
+  if (card.id === "EXPLOSIVE_DRIVE"){
+    state.liftBonus += 20;
+    log("Explosive Drive: next lift +20kg.");
+  }
+
+  if (card.id === "RESET"){
+    if (state.badEffects > 0){
+      state.badEffects -= 1;
+      log("Reset: removed 1 bad effect.");
+    } else {
+      log("Reset: no bad effects to remove.");
+    }
+  }
+
+  // move card to discard
+  state.discardPile.push(card);
+  state.hand.splice(handIndex, 1);
+
+  // auto-check victory
+  checkVictory();
+
+  render();
+}
+
+document.getElementById("btnEnd").addEventListener("click", () => {
+  if (state.ended) return;
+  discardHand();
+  if (state.turnInCycle === 3){
+    log("— Lift Phase —");
+    performLift();
+    const advance = Math.max(0, state.enemyPerCycle - state.guard);
+    state.guard = Math.max(0, state.guard - state.enemyPerCycle);
+    state.totalLifted += advance;
+    log(`Alien advances: +${advance}kg to your bar.`);
+    elEnemySprite.src = "enemy01.png";
+    setTimeout(() => {
+      elEnemySprite.src = "enemy02.png";
+    }, 2000);
+    checkDefeat();
+    state.turnInCycle = 1;
+  } else {
+    state.turnInCycle += 1;
+  }
+  state.turn += 1;
+  startPlayerTurn(false);
+  render();
+});
+
+document.getElementById("btnDraw").addEventListener("click", () => {
+  if (state.ended) return;
+  if (state.hand.length < 5){
+    draw(1);
+    render();
+  }
+});
+
+document.getElementById("btnNew").addEventListener("click", resetBattle);
+
+// boot
+resetBattle();
+</script>
+</body>
+</html>
