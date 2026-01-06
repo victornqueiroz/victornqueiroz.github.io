@@ -156,6 +156,7 @@
       <div class="side panel">
         <div><strong>Debug</strong></div>
         <div id="status" class="hint">x: 4, y: 4</div>
+        <div id="room6-debug" class="hint">room6Path: none</div>
         <hr />
         <div class="hint">
           Walls are solid. 
@@ -180,6 +181,7 @@
 
     const statusEl = document.getElementById("status");
     const roomLabelEl = document.getElementById("room-label");
+    const room6DebugEl = document.getElementById("room6-debug");
 
     // Simple room: 0 = floor, 1 = wall, 2 = door, 3 = button
     const DOOR = 2;
@@ -348,8 +350,7 @@
     let room4ButtonActive = false;
     let room3Visited = false;
     let room1LeftDoorUnlocked = false;
-    let room6LeftTrigger = false;
-    let room6RightTrigger = false;
+    let room6Path = null;
 
     let last = performance.now();
     function loop(now) {
@@ -395,8 +396,8 @@
               room4ButtonActive = true;
             }
             if (roomIndex === 4 && player.y === MID) {
-              if (player.x === 1 || player.x === 2) room6LeftTrigger = true;
-              if (player.x === 6 || player.x === 7) room6RightTrigger = true;
+              if (player.x === 1 || player.x === 2) room6Path = "left";
+              if (player.x === 6 || player.x === 7) room6Path = "right";
             }
             tryDoorTransition();
           }
@@ -433,8 +434,8 @@
       if (roomIndex === 1 && player.x === 0 && player.y === MID) {
         target = 2;
       } else if (roomIndex === 4 && player.x === MID && player.y === 0) {
-        if (room6LeftTrigger) target = 7;
-        else if (room6RightTrigger) target = 8;
+        if (room6Path === "left") target = 7;
+        else if (room6Path === "right") target = 8;
       }
 
       transition.active = true;
@@ -541,7 +542,9 @@
         ctx.fillRect(0, 0, W, H);
       }
 
+      const room6PathLabel = room6Path ? room6Path : "none";
       statusEl.textContent = `x: ${player.x}, y: ${player.y}`;
+      room6DebugEl.textContent = `room6Path: ${room6PathLabel}`;
       roomLabelEl.textContent = `Room ${roomDefs[roomIndex].label}`;
     }
 
