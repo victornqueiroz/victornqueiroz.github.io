@@ -86,6 +86,38 @@
       box-shadow: 2px 2px 0 var(--ink);
       margin: 0 2px;
     }
+
+    .controls {
+      margin-top: 10px;
+      display: grid;
+      gap: 6px;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .controls-row {
+      display: grid;
+      grid-auto-flow: column;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .ctrl-btn {
+      width: 66px;
+      height: 66px;
+      border: 2px solid var(--ink);
+      background: #fff;
+      box-shadow: 3px 3px 0 var(--ink);
+      font-size: 30px;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .ctrl-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 var(--ink);
+    }
   </style>
 </head>
 <body>
@@ -98,7 +130,7 @@
         <div>Move:</div>
         <div>
           <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span>
-          or
+          oralso 
           <span class="kbd">↑</span><span class="kbd">←</span><span class="kbd">↓</span><span class="kbd">→</span>
         </div>
       </div>
@@ -108,7 +140,17 @@
           <canvas id="game" width="144" height="144"></canvas>
         </div>
         <div id="room-label" class="hint">Room 1</div>
-        <div class="hint">9×9 tiles @ 16px (canvas is 144×144, scaled up).</div>
+        <div class="hint"></div>
+        <div class="controls" aria-label="On-screen controls">
+          <div class="controls-row">
+            <button class="ctrl-btn" data-dir="up" aria-label="Move up">↑</button>
+          </div>
+          <div class="controls-row">
+            <button class="ctrl-btn" data-dir="left" aria-label="Move left">←</button>
+            <button class="ctrl-btn" data-dir="down" aria-label="Move down">↓</button>
+            <button class="ctrl-btn" data-dir="right" aria-label="Move right">→</button>
+          </div>
+        </div>
       </div>
 
       <div class="side panel">
@@ -246,6 +288,8 @@
     };
 
     const keys = new Set();
+    let queuedMove = null;
+    let heldDir = null;
 
     window.addEventListener("keydown", (e) => {
       const k = e.key.toLowerCase();
@@ -257,6 +301,28 @@
 
     window.addEventListener("keyup", (e) => {
       keys.delete(e.key.toLowerCase());
+    });
+
+    document.querySelectorAll(".ctrl-btn").forEach((btn) => {
+      const dir = btn.dataset.dir;
+      const vec =
+        dir === "up" ? { dx: 0, dy: -1 } :
+        dir === "down" ? { dx: 0, dy: 1 } :
+        dir === "left" ? { dx: -1, dy: 0 } :
+        { dx: 1, dy: 0 };
+
+      btn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        heldDir = { dx: vec.dx, dy: vec.dy };
+      });
+
+      const clearHeld = () => {
+        heldDir = null;
+      };
+
+      btn.addEventListener("pointerup", clearHeld);
+      btn.addEventListener("pointerleave", clearHeld);
+      btn.addEventListener("pointercancel", clearHeld);
     });
 
     function isSolid(tx, ty) {
@@ -293,12 +359,21 @@
       if (!transition.active) {
         moveCooldown -= dt;
         if (moveCooldown <= 0) {
-          const dx =
+          let dx =
             (keys.has("arrowright") || keys.has("d") ? 1 : 0) +
             (keys.has("arrowleft")  || keys.has("a") ? -1 : 0);
-          const dy =
+          let dy =
             (keys.has("arrowdown") || keys.has("s") ? 1 : 0) +
             (keys.has("arrowup")   || keys.has("w") ? -1 : 0);
+
+          if (dx === 0 && dy === 0 && heldDir) {
+            dx = heldDir.dx;
+            dy = heldDir.dy;
+          } else if (dx === 0 && dy === 0 && queuedMove) {
+            dx = queuedMove.dx;
+            dy = queuedMove.dy;
+            queuedMove = null;
+          }
 
           // Prefer horizontal if both held (simple rule)
           let nx = player.x;
@@ -337,10 +412,6 @@
           player.y = transition.targetY;
           if (roomIndex === 2) {
             room3Visited = true;
-          }
-          if (roomIndex === 4) {
-            room6LeftTrigger = false;
-            room6RightTrigger = false;
           }
           transition.alpha = 1;
           transition.dir = -1;
