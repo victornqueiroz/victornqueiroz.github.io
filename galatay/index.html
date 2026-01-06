@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>9x9 Room Prototype</title>
+  <style>
+    :root{
+      /* Game Boy-ish scale knobs */
+      --tile: 16px;       /* tile size */
+      --grid: 9;          /* 9x9 */
+      --scale: 3;         /* pixel upscaling */
+      --room-px: calc(var(--tile) * var(--grid));
+      --room-scale: calc(var(--room-px) * var(--scale));
+      --ink: #111;
+      --paper: #f7f7f7;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    /* Layout: room centered, extra space for UI */
+    .page {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .frame {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 20px;
+      align-items: center;
+      width: min(980px, 96vw);
+    }
+
+    .side {
+      font-size: 14px;
+      line-height: 1.4;
+      opacity: 0.85;
+      user-select: none;
+    }
+
+    .panel {
+      border: 2px solid var(--ink);
+      padding: 12px 14px;
+      background: #fff;
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+
+    /* Canvas wrapper gives the "Game Boy screen" feel */
+    .screen {
+      width: var(--room-scale);
+      height: var(--room-scale);
+      border: 3px solid var(--ink);
+      background: #fff;
+      box-shadow: 10px 10px 0 var(--ink);
+      image-rendering: pixelated;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .kbd {
+      display: inline-block;
+      border: 1px solid var(--ink);
+      padding: 1px 6px;
+      background: #fff;
+      box-shadow: 2px 2px 0 var(--ink);
+      margin: 0 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="frame">
+      <div class="side panel">
+        <div><strong>Instructions</strong></div>
+        <div class="hint">Controls:</div>
+        <hr />
+        <div>Move:</div>
+        <div>
+          <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span>
+          or
+          <span class="kbd">↑</span><span class="kbd">←</span><span class="kbd">↓</span><span class="kbd">→</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="screen">
+          <canvas id="game" width="144" height="144"></canvas>
+        </div>
+        <div id="room-label" class="hint">Room 1</div>
+        <div class="hint">9×9 tiles @ 16px (canvas is 144×144, scaled up).</div>
+      </div>
+
+      <div class="side panel">
+        <div><strong>Debug</strong></div>
+        <div id="status" class="hint">x: 4, y: 4</div>
+        <hr />
+        <div class="hint">
+          Walls are solid. 
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Config =====
+    const TILE = 16;
+    const GRID = 9;
+    const W = TILE * GRID;
+    const H = TILE * GRID;
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    // Keep canvas "true size" pixel art
+    canvas.width = W;
+    canvas.height = H;
+
+    const statusEl = document.getElementById("status");
+    const roomLabelEl = document.getElementById("room-label");
+
+    // Simple room: 0 = floor, 1 = wall, 2 = door, 3 = button
+    const DOOR = 2;
+    const BUTTON = 3;
+    const MID = Math.floor(GRID / 2);
+    const ROOM4_BUTTON = { x: MID, y: MID };
+
+    function makeRoom(doors) {
+      const room = [];
+      for (let y = 0; y < GRID; y++) {
+        room[y] = [];
+        for (let x = 0; x < GRID; x++) {
+          const isEdge = (x === 0 || y === 0 || x === GRID - 1 || y === GRID - 1);
+          room[y][x] = isEdge ? 1 : 0;
+        }
+      }
+      for (const door of doors) room[door.y][door.x] = DOOR;
+      return room;
+    }
+
+    const roomDefs = [
+      {
+        label: 1,
+        floor: "#c9ff8f",
+        doors: [
+          { x: MID, y: 0, target: 1, spawnX: MID, spawnY: GRID - 2 },
+        ],
+      },
+      {
+        label: 2,
+        floor: "#a7d8ff",
+        doors: [
+          { x: MID, y: GRID - 1, target: 0, spawnX: MID, spawnY: 1 },
+          { x: 0, y: MID, target: 2, spawnX: GRID - 2, spawnY: MID },
+          { x: GRID - 1, y: MID, target: 3, spawnX: 1, spawnY: MID },
+        ],
+      },
+      {
+        label: 3,
+        floor: "#ffd07a",
+        doors: [
+          { x: GRID - 1, y: MID, target: 1, spawnX: 1, spawnY: MID },
+          { x: MID, y: GRID - 1, target: 5, spawnX: MID, spawnY: 1 },
+        ],
+      },
+      {
+        label: 4,
+        floor: "#ff9fd6",
+        doors: [
+          { x: 0, y: MID, target: 1, spawnX: GRID - 2, spawnY: MID },
+        ],
+      },
+      {
+        label: 6,
+        floor: "#7ff1c8",
+        doors: [
+          { x: MID, y: GRID - 1, target: 1, spawnX: MID, spawnY: 1 },
+          { x: MID, y: 0, target: 0, spawnX: MID, spawnY: GRID - 2 },
+        ],
+      },
+      {
+        label: 7,
+        floor: "#ffe08f",
+        doors: [
+          { x: MID, y: 0, target: 2, spawnX: MID, spawnY: GRID - 2 },
+          { x: GRID - 1, y: MID, target: 0, spawnX: 1, spawnY: MID },
+        ],
+      },
+      {
+        label: 8,
+        floor: "#9fd4ff",
+        doors: [
+          { x: GRID - 1, y: MID, target: 0, spawnX: 1, spawnY: MID },
+        ],
+      },
+      {
+        label: 9,
+        floor: "#f6b3ff",
+        doors: [
+          { x: MID, y: GRID - 1, target: 4, spawnX: MID, spawnY: 1 },
+        ],
+      },
+      {
+        label: 10,
+        floor: "#b8ff8a",
+        doors: [
+          { x: MID, y: GRID - 1, target: 4, spawnX: MID, spawnY: 1 },
+        ],
+      },
+    ];
+
+    const rooms = roomDefs.map((def) => makeRoom(def.doors));
+    for (let y = 3; y <= 5; y++) {
+      for (let x = 3; x <= 5; x++) {
+        rooms[4][y][x] = 1;
+      }
+    }
+    let roomIndex = 0;
+
+    // Player in tile coords (center-ish)
+    const player = {
+      x: 4,
+      y: 4,
+      // for smooth-ish movement later we could add px coords;
+      // keep it tile-based for this MVP
+    };
+
+    const keys = new Set();
+
+    window.addEventListener("keydown", (e) => {
+      const k = e.key.toLowerCase();
+      if (["arrowup","arrowdown","arrowleft","arrowright","w","a","s","d"].includes(k)) {
+        e.preventDefault();
+        keys.add(k);
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      keys.delete(e.key.toLowerCase());
+    });
+
+    function isSolid(tx, ty) {
+      if (tx < 0 || ty < 0 || tx >= GRID || ty >= GRID) return true;
+      if (getDoorAt(roomIndex, tx, ty)) return false;
+      return rooms[roomIndex][ty][tx] === 1;
+    }
+
+    // Move once per key press repeat is fine for MVP; add cooldown for “grid step” feel.
+    let moveCooldown = 0;
+    const MOVE_DELAY = 90; // ms
+
+    // Simple fade transition state
+    const transition = {
+      active: false,
+      alpha: 0,
+      dir: 1,
+      targetRoom: 0,
+      targetX: 0,
+      targetY: 0,
+    };
+    const FADE_DURATION = 250; // ms
+    let room4ButtonActive = false;
+    let room3Visited = false;
+    let room1LeftDoorUnlocked = false;
+    let room6LeftTrigger = false;
+    let room6RightTrigger = false;
+
+    let last = performance.now();
+    function loop(now) {
+      const dt = now - last;
+      last = now;
+
+      if (!transition.active) {
+        moveCooldown -= dt;
+        if (moveCooldown <= 0) {
+          const dx =
+            (keys.has("arrowright") || keys.has("d") ? 1 : 0) +
+            (keys.has("arrowleft")  || keys.has("a") ? -1 : 0);
+          const dy =
+            (keys.has("arrowdown") || keys.has("s") ? 1 : 0) +
+            (keys.has("arrowup")   || keys.has("w") ? -1 : 0);
+
+          // Prefer horizontal if both held (simple rule)
+          let nx = player.x;
+          let ny = player.y;
+
+          if (dx !== 0) nx = player.x + Math.sign(dx);
+          else if (dy !== 0) ny = player.y + Math.sign(dy);
+
+          if ((nx !== player.x || ny !== player.y) && !isSolid(nx, ny)) {
+            player.x = nx;
+            player.y = ny;
+            moveCooldown = MOVE_DELAY;
+            if (
+              roomIndex === 3 &&
+              player.x === ROOM4_BUTTON.x &&
+              player.y === ROOM4_BUTTON.y &&
+              room3Visited
+            ) {
+              room4ButtonActive = true;
+            }
+            if (roomIndex === 4 && player.y === MID) {
+              if (player.x === 1 || player.x === 2) room6LeftTrigger = true;
+              if (player.x === 6 || player.x === 7) room6RightTrigger = true;
+            }
+            tryDoorTransition();
+          }
+        }
+      } else {
+        transition.alpha += (dt / FADE_DURATION) * transition.dir;
+        if (transition.dir > 0 && transition.alpha >= 1) {
+          if (roomIndex === 5 && transition.targetRoom === 0) {
+            room1LeftDoorUnlocked = true;
+          }
+          roomIndex = transition.targetRoom;
+          player.x = transition.targetX;
+          player.y = transition.targetY;
+          if (roomIndex === 2) {
+            room3Visited = true;
+          }
+          if (roomIndex === 4) {
+            room6LeftTrigger = false;
+            room6RightTrigger = false;
+          }
+          transition.alpha = 1;
+          transition.dir = -1;
+        } else if (transition.dir < 0 && transition.alpha <= 0) {
+          transition.alpha = 0;
+          transition.active = false;
+        }
+      }
+
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function tryDoorTransition() {
+      const door = getDoorAt(roomIndex, player.x, player.y);
+      if (!door) return;
+
+      let target = door.target;
+      if (roomIndex === 1 && player.x === 0 && player.y === MID) {
+        target = 2;
+      } else if (roomIndex === 4 && player.x === MID && player.y === 0) {
+        if (room6LeftTrigger) target = 7;
+        else if (room6RightTrigger) target = 8;
+      }
+
+      transition.active = true;
+      transition.alpha = 0;
+      transition.dir = 1;
+      transition.targetRoom = target;
+      transition.targetX = door.spawnX;
+      transition.targetY = door.spawnY;
+    }
+
+    function getDoorAt(rIndex, x, y) {
+      let doors = roomDefs[rIndex].doors;
+      if (rIndex === 1 && room4ButtonActive) {
+        doors = doors.concat([
+          { x: MID, y: 0, target: 4, spawnX: MID, spawnY: GRID - 2 },
+        ]);
+      }
+      if (rIndex === 0 && room1LeftDoorUnlocked) {
+        doors = doors.concat([
+          { x: 0, y: MID, target: 6, spawnX: GRID - 2, spawnY: MID },
+        ]);
+      }
+      return doors.find((d) => d.x === x && d.y === y);
+    }
+
+    function draw() {
+      // Clear
+      ctx.clearRect(0, 0, W, H);
+
+      const roomLabel = String(roomDefs[roomIndex].label);
+      const floorBase = roomDefs[roomIndex].floor;
+      const floorShade = "rgba(0,0,0,0.10)";
+
+      // Draw tiles
+      for (let y = 0; y < GRID; y++) {
+        for (let x = 0; x < GRID; x++) {
+          const t = rooms[roomIndex][y][x];
+
+          // Floor
+          if (t === 0) {
+            ctx.fillStyle = floorBase;
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+
+            // subtle checker
+            if ((x + y) % 2 === 0) {
+              ctx.fillStyle = "rgba(0,0,0,0.04)";
+              ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+            }
+          }
+
+          // Wall
+          if (t === 1) {
+            ctx.fillStyle = "#1b1b1b";
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+
+            // tiny highlight
+            ctx.fillStyle = "#2b2b2b";
+            ctx.fillRect(x * TILE + 2, y * TILE + 2, TILE - 4, TILE - 4);
+          }
+
+          // Door
+          if (getDoorAt(roomIndex, x, y)) {
+            ctx.fillStyle = "#1b1b1b";
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+            ctx.fillStyle = "#c7a24a";
+            ctx.fillRect(x * TILE + 3, y * TILE + 4, TILE - 6, TILE - 6);
+            ctx.fillStyle = "#8b6a22";
+            ctx.fillRect(x * TILE + 6, y * TILE + 7, 2, 2);
+          }
+
+          if (roomIndex === 3 && room3Visited && x === ROOM4_BUTTON.x && y === ROOM4_BUTTON.y) {
+            ctx.fillStyle = "#1b1b1b";
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+            ctx.fillStyle = room4ButtonActive ? "#2fe36f" : "#ff5a5a";
+            ctx.fillRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
+            ctx.fillStyle = "#111";
+            ctx.fillRect(x * TILE + 7, y * TILE + 7, 2, 2);
+          }
+
+          // Grid lines (optional vibe)
+          ctx.strokeStyle = "rgba(0,0,0,0.10)";
+          ctx.strokeRect(x * TILE, y * TILE, TILE, TILE);
+        }
+      }
+
+      drawRoomNumber(roomLabel, floorShade);
+
+      // Draw player (simple 12x12 sprite centered in tile)
+      const px = player.x * TILE;
+      const py = player.y * TILE;
+
+      ctx.fillStyle = "#0b0b0b";
+      ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+
+      ctx.fillStyle = "#f8f8f8";
+      ctx.fillRect(px + 4, py + 4, TILE - 8, TILE - 8);
+
+      // “face” dot
+      ctx.fillStyle = "#0b0b0b";
+      ctx.fillRect(px + 10, py + 6, 2, 2);
+
+      if (transition.alpha > 0) {
+        ctx.fillStyle = `rgba(0,0,0,${transition.alpha})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      statusEl.textContent = `x: ${player.x}, y: ${player.y}`;
+      roomLabelEl.textContent = `Room ${roomDefs[roomIndex].label}`;
+    }
+
+    const digitMap = {
+      "0": ["111","101","101","101","111"],
+      "1": ["010","110","010","010","111"],
+      "2": ["111","001","111","100","111"],
+      "3": ["111","001","111","001","111"],
+      "4": ["101","101","111","001","001"],
+      "5": ["111","100","111","001","111"],
+      "6": ["111","100","111","101","111"],
+      "7": ["111","001","001","010","010"],
+      "8": ["111","101","111","101","111"],
+      "9": ["111","101","111","001","111"],
+    };
+
+    function drawRoomNumber(text, shade) {
+      const digitW = 3;
+      const digitH = 5;
+      const gap = 1;
+      const totalW = text.length * digitW + (text.length - 1) * gap;
+      const startX = Math.floor((GRID - totalW) / 2);
+      const startY = 2;
+
+      for (let i = 0; i < text.length; i++) {
+        const glyph = digitMap[text[i]];
+        if (!glyph) continue;
+        const ox = startX + i * (digitW + gap);
+        for (let gy = 0; gy < digitH; gy++) {
+          for (let gx = 0; gx < digitW; gx++) {
+            if (glyph[gy][gx] === "1") {
+              ctx.fillStyle = shade;
+              ctx.fillRect((ox + gx) * TILE, (startY + gy) * TILE, TILE, TILE);
+            }
+          }
+        }
+      }
+    }
+
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
