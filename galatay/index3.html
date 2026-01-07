@@ -199,20 +199,6 @@
       playerImgReady = true;
     };
 
-    const treeImg = new Image();
-    treeImg.src = "tree.png";
-    let treeImgReady = false;
-    treeImg.onload = () => {
-      treeImgReady = true;
-    };
-
-    const watermelonImg = new Image();
-    watermelonImg.src = "watermelon.png";
-    let watermelonImgReady = false;
-    watermelonImg.onload = () => {
-      watermelonImgReady = true;
-    };
-
     // Simple room: 0 = floor, 1 = wall, 2 = door, 3 = button
     const DOOR = 2;
     const BUTTON = 3;
@@ -235,7 +221,7 @@
     const roomDefs = [
       {
         label: 1,
-        floor: "#239063",
+        floor: "#29adff",
         doors: [
           { x: MID, y: 0, target: 1, spawnX: MID, spawnY: GRID - 2 },
         ],
@@ -304,12 +290,6 @@
     ];
 
     const rooms = roomDefs.map((def) => makeRoom(def.doors));
-    const room1TreeBlocks = new Set([
-      "1,1","2,1","1,2","2,2",
-      "6,1","7,1","6,2","7,2",
-      "1,6","2,6","1,7","2,7",
-      "6,6","7,6","6,7","7,7",
-    ]);
     for (let y = 3; y <= 5; y++) {
       for (let x = 3; x <= 5; x++) {
         rooms[4][y][x] = 1;
@@ -366,8 +346,6 @@
     function isSolid(tx, ty) {
       if (tx < 0 || ty < 0 || tx >= GRID || ty >= GRID) return true;
       if (getDoorAt(roomIndex, tx, ty)) return false;
-      if (roomIndex === 0 && room1TreeBlocks.has(`${tx},${ty}`)) return true;
-      if (roomIndex === 8 && room10Watermelon && tx === MID && ty === MID) return true;
       return rooms[roomIndex][ty][tx] === 1;
     }
 
@@ -393,7 +371,6 @@
     let room6Path = null;
     let room10Discovered = false;
     let room10LinkUnlocked = false;
-    let room10Watermelon = false;
     let facing = 1;
 
     let last = performance.now();
@@ -461,7 +438,6 @@
           }
           if (roomIndex === 6 && transition.targetRoom === 8) {
             room10LinkUnlocked = true;
-            room10Watermelon = true;
           }
           roomIndex = transition.targetRoom;
           player.x = transition.targetX;
@@ -547,58 +523,16 @@
           if (t !== 0) continue;
           ctx.fillStyle = floorBase;
           ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-          if (roomDefs[roomIndex].label !== 1) {
-            const jitter = (x * 17 + y * 31 + roomDefs[roomIndex].label * 13) % 5;
-            const offset = jitter === 0 ? 1 : 0;
-            if ((x + y + offset) % 2 === 0) {
-              ctx.fillStyle = "rgba(0,0,0,0.12)";
-              ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-            }
+          const jitter = (x * 17 + y * 31 + roomDefs[roomIndex].label * 13) % 5;
+          const offset = jitter === 0 ? 1 : 0;
+          if ((x + y + offset) % 2 === 0) {
+            ctx.fillStyle = "rgba(0,0,0,0.12)";
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
           }
         }
       }
 
-      drawRoomNumber(roomLabel, floorBase, numberShade, roomDefs[roomIndex].label === 1);
-
-      if (roomDefs[roomIndex].label === 1) {
-        for (let y = 0; y < GRID; y++) {
-          for (let x = 0; x < GRID; x++) {
-            const t = rooms[roomIndex][y][x];
-            if (t !== 0) continue;
-            const seed = (x * 29 + y * 53) % 7;
-            if (seed <= 2) {
-              ctx.fillStyle = "#165a4c";
-              ctx.fillRect(x * TILE + 2, y * TILE + 3, 2, 2);
-              ctx.fillRect(x * TILE + 10, y * TILE + 8, 2, 2);
-            } else if (seed === 3) {
-              ctx.fillStyle = "#1ebc73";
-              ctx.fillRect(x * TILE + 6, y * TILE + 2, 1, 3);
-              ctx.fillRect(x * TILE + 9, y * TILE + 10, 1, 2);
-            } else if (seed === 4) {
-              ctx.fillStyle = "#165a4c";
-              ctx.fillRect(x * TILE + 4, y * TILE + 9, 1, 3);
-              ctx.fillRect(x * TILE + 5, y * TILE + 8, 1, 2);
-              ctx.fillRect(x * TILE + 6, y * TILE + 9, 1, 3);
-            } else if (seed === 5) {
-              ctx.fillStyle = "#ff77a8";
-              ctx.fillRect(x * TILE + 6, y * TILE + 6, 2, 2);
-              ctx.fillStyle = "#ffec27";
-              ctx.fillRect(x * TILE + 7, y * TILE + 7, 1, 1);
-            }
-          }
-        }
-      }
-
-      if (roomDefs[roomIndex].label === 1 && treeImgReady) {
-        ctx.drawImage(treeImg, TILE, TILE, TILE * 2, TILE * 2);
-        ctx.drawImage(treeImg, TILE * 6, TILE, TILE * 2, TILE * 2);
-        ctx.drawImage(treeImg, TILE, TILE * 6, TILE * 2, TILE * 2);
-        ctx.drawImage(treeImg, TILE * 6, TILE * 6, TILE * 2, TILE * 2);
-      }
-
-      if (roomDefs[roomIndex].label === 10 && room10Watermelon && watermelonImgReady) {
-        ctx.drawImage(watermelonImg, MID * TILE, MID * TILE, TILE, TILE);
-      }
+      drawRoomNumber(roomLabel, floorBase, numberShade);
 
       // Draw walls/doors/buttons/grid
       for (let y = 0; y < GRID; y++) {
@@ -697,7 +631,7 @@
       "9": ["111","101","111","001","111"],
     };
 
-    function drawRoomNumber(text, base, shade, isRoomOne) {
+    function drawRoomNumber(text, base, shade) {
       const digitW = 3;
       const digitH = 5;
       const gap = 1;
@@ -717,7 +651,7 @@
               if (rooms[roomIndex][ty][tx] !== 0) continue;
               ctx.fillStyle = base;
               ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
-              ctx.fillStyle = isRoomOne ? "rgba(0,0,0,0.07)" : shade;
+              ctx.fillStyle = shade;
               ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
             }
           }
