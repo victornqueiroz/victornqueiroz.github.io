@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GALATAY</title>
+  <title>9x9 Room Prototype</title>
   <style>
     :root{
       /* Game Boy-ish scale knobs */
@@ -126,11 +126,6 @@
       transform: translate(1px, 1px);
       box-shadow: 2px 2px 0 var(--ink);
     }
-
-    #room6-debug
-    {
-      display:none;
-    }
   </style>
 </head>
 <body>
@@ -138,13 +133,12 @@
     <div class="frame">
       <div class="side panel">
         <div><strong>Instructions</strong></div>
-        <div class="hint">Find the watermelon. 🍉</div>
         <div class="hint">Controls:</div>
         <hr />
-        <div>Move:</div><br>
+        <div>Move:</div>
         <div>
           <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span>
-          <br>
+          oralso 
           <span class="kbd">↑</span><span class="kbd">←</span><span class="kbd">↓</span><span class="kbd">→</span>
         </div>
       </div>
@@ -173,6 +167,7 @@
         <div id="room6-debug" class="hint">room6Path: none</div>
         <hr />
         <div class="hint">
+          Walls are solid. 
         </div>
       </div>
     </div>
@@ -615,22 +610,6 @@
             ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
             ctx.fillStyle = "#5f574f";
             ctx.fillRect(x * TILE + 2, y * TILE + 2, TILE - 4, TILE - 4);
-
-            if (roomDefs[roomIndex].label === 6 && y === 4 && (x === 3 || x === 5)) {
-              ctx.fillStyle = "#ffec27";
-              ctx.beginPath();
-              if (x === 3) {
-                ctx.moveTo(x * TILE + 4, y * TILE + 8);
-                ctx.lineTo(x * TILE + 11, y * TILE + 4);
-                ctx.lineTo(x * TILE + 11, y * TILE + 12);
-              } else {
-                ctx.moveTo(x * TILE + 12, y * TILE + 8);
-                ctx.lineTo(x * TILE + 5, y * TILE + 4);
-                ctx.lineTo(x * TILE + 5, y * TILE + 12);
-              }
-              ctx.closePath();
-              ctx.fill();
-            }
           }
 
           if (getDoorAt(roomIndex, x, y)) {
