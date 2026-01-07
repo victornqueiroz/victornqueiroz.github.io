@@ -22,7 +22,6 @@
       background: var(--paper);
       color: var(--ink);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      user-select: none;
     }
 
     /* Layout: room centered, extra space for UI */
@@ -113,7 +112,6 @@
       line-height: 1;
       cursor: pointer;
       touch-action: manipulation;
-      user-select: none;
     }
 
     .ctrl-btn:active {
@@ -142,7 +140,7 @@
           <canvas id="game" width="144" height="144"></canvas>
         </div>
         <div id="room-label" class="hint">Room 1</div>
-        <div class="hint">9×9 tiles @ 16px (canvas is 144×144, scaled up).</div>
+        <div class="hint"></div>
         <div class="controls" aria-label="On-screen controls">
           <div class="controls-row">
             <button class="ctrl-btn" data-dir="up" aria-label="Move up">↑</button>
@@ -176,7 +174,6 @@
 
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = false;
 
     // Keep canvas "true size" pixel art
     canvas.width = W;
@@ -185,13 +182,6 @@
     const statusEl = document.getElementById("status");
     const roomLabelEl = document.getElementById("room-label");
     const room6DebugEl = document.getElementById("room6-debug");
-
-    const playerImg = new Image();
-    playerImg.src = "player.png";
-    let playerImgReady = false;
-    playerImg.onload = () => {
-      playerImgReady = true;
-    };
 
     // Simple room: 0 = floor, 1 = wall, 2 = door, 3 = button
     const DOOR = 2;
@@ -215,14 +205,14 @@
     const roomDefs = [
       {
         label: 1,
-        floor: "#29adff",
+        floor: "#c9ff8f",
         doors: [
           { x: MID, y: 0, target: 1, spawnX: MID, spawnY: GRID - 2 },
         ],
       },
       {
         label: 2,
-        floor: "#00e436",
+        floor: "#a7d8ff",
         doors: [
           { x: MID, y: GRID - 1, target: 0, spawnX: MID, spawnY: 1 },
           { x: 0, y: MID, target: 2, spawnX: GRID - 2, spawnY: MID },
@@ -231,7 +221,7 @@
       },
       {
         label: 3,
-        floor: "#ffec27",
+        floor: "#ffd07a",
         doors: [
           { x: GRID - 1, y: MID, target: 1, spawnX: 1, spawnY: MID },
           { x: MID, y: GRID - 1, target: 5, spawnX: MID, spawnY: 1 },
@@ -239,14 +229,14 @@
       },
       {
         label: 4,
-        floor: "#ff77a8",
+        floor: "#ff9fd6",
         doors: [
           { x: 0, y: MID, target: 1, spawnX: GRID - 2, spawnY: MID },
         ],
       },
       {
         label: 6,
-        floor: "#83769c",
+        floor: "#7ff1c8",
         doors: [
           { x: MID, y: GRID - 1, target: 1, spawnX: MID, spawnY: 1 },
           { x: MID, y: 0, target: 0, spawnX: MID, spawnY: GRID - 2 },
@@ -254,7 +244,7 @@
       },
       {
         label: 7,
-        floor: "#ffccaa",
+        floor: "#ffe08f",
         doors: [
           { x: MID, y: 0, target: 2, spawnX: MID, spawnY: GRID - 2 },
           { x: GRID - 1, y: MID, target: 0, spawnX: 1, spawnY: MID },
@@ -262,21 +252,21 @@
       },
       {
         label: 8,
-        floor: "#7e2553",
+        floor: "#9fd4ff",
         doors: [
           { x: GRID - 1, y: MID, target: 0, spawnX: 1, spawnY: MID },
         ],
       },
       {
         label: 9,
-        floor: "#c2c3c7",
+        floor: "#f6b3ff",
         doors: [
           { x: MID, y: GRID - 1, target: 4, spawnX: MID, spawnY: 1 },
         ],
       },
       {
         label: 10,
-        floor: "#ab5236",
+        floor: "#b8ff8a",
         doors: [
           { x: MID, y: GRID - 1, target: 4, spawnX: MID, spawnY: 1 },
         ],
@@ -346,8 +336,6 @@
     // Move once per key press repeat is fine for MVP; add cooldown for “grid step” feel.
     let moveCooldown = 0;
     const MOVE_DELAY = 90; // ms
-    const HOP_DURATION = 120; // ms
-    let hopTimer = 0;
 
     // Simple fade transition state
     const transition = {
@@ -363,9 +351,6 @@
     let room3Visited = false;
     let room1LeftDoorUnlocked = false;
     let room6Path = null;
-    let room10Discovered = false;
-    let room10LinkUnlocked = false;
-    let facing = 1;
 
     let last = performance.now();
     function loop(now) {
@@ -399,13 +384,9 @@
           else if (dy !== 0) ny = player.y + Math.sign(dy);
 
           if ((nx !== player.x || ny !== player.y) && !isSolid(nx, ny)) {
-            if (nx !== player.x) {
-              facing = nx > player.x ? 1 : -1;
-            }
             player.x = nx;
             player.y = ny;
             moveCooldown = MOVE_DELAY;
-            hopTimer = HOP_DURATION;
             if (
               roomIndex === 3 &&
               player.x === ROOM4_BUTTON.x &&
@@ -427,12 +408,6 @@
           if (roomIndex === 5 && transition.targetRoom === 0) {
             room1LeftDoorUnlocked = true;
           }
-          if (transition.targetRoom === 8) {
-            room10Discovered = true;
-          }
-          if (roomIndex === 6 && transition.targetRoom === 8) {
-            room10LinkUnlocked = true;
-          }
           roomIndex = transition.targetRoom;
           player.x = transition.targetX;
           player.y = transition.targetY;
@@ -445,10 +420,6 @@
           transition.alpha = 0;
           transition.active = false;
         }
-      }
-
-      if (hopTimer > 0) {
-        hopTimer = Math.max(0, hopTimer - dt);
       }
 
       draw();
@@ -482,16 +453,6 @@
           { x: MID, y: 0, target: 4, spawnX: MID, spawnY: GRID - 2 },
         ]);
       }
-      if (rIndex === 6 && room10Discovered) {
-        doors = doors.concat([
-          { x: 0, y: MID, target: 8, spawnX: GRID - 2, spawnY: MID },
-        ]);
-      }
-      if (rIndex === 8 && room10LinkUnlocked) {
-        doors = doors.concat([
-          { x: GRID - 1, y: MID, target: 6, spawnX: 1, spawnY: MID },
-        ]);
-      }
       if (rIndex === 0 && room1LeftDoorUnlocked) {
         doors = doors.concat([
           { x: 0, y: MID, target: 6, spawnX: GRID - 2, spawnY: MID },
@@ -503,103 +464,78 @@
     function draw() {
       // Clear
       ctx.clearRect(0, 0, W, H);
-      ctx.imageSmoothingEnabled = false;
 
       const roomLabel = String(roomDefs[roomIndex].label);
       const floorBase = roomDefs[roomIndex].floor;
-      const floorShade = "rgba(0,0,0,0.18)";
-      const numberShade = "rgba(0,0,0,0.22)";
+      const floorShade = "rgba(0,0,0,0.10)";
 
-      // Draw floors
+      // Draw tiles
       for (let y = 0; y < GRID; y++) {
         for (let x = 0; x < GRID; x++) {
           const t = rooms[roomIndex][y][x];
-          if (t !== 0) continue;
-          ctx.fillStyle = floorBase;
-          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-          const jitter = (x * 17 + y * 31 + roomDefs[roomIndex].label * 13) % 5;
-          const offset = jitter === 0 ? 1 : 0;
-          if ((x + y + offset) % 2 === 0) {
-            ctx.fillStyle = "rgba(0,0,0,0.12)";
+
+          // Floor
+          if (t === 0) {
+            ctx.fillStyle = floorBase;
             ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+
+            // subtle checker
+            if ((x + y) % 2 === 0) {
+              ctx.fillStyle = "rgba(0,0,0,0.04)";
+              ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+            }
           }
-        }
-      }
 
-      drawRoomNumber(roomLabel, floorBase, numberShade);
-
-      // Draw walls/doors/buttons/grid
-      for (let y = 0; y < GRID; y++) {
-        for (let x = 0; x < GRID; x++) {
-          const t = rooms[roomIndex][y][x];
-
+          // Wall
           if (t === 1) {
-            ctx.fillStyle = "#1d2b53";
+            ctx.fillStyle = "#1b1b1b";
             ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-            ctx.fillStyle = "#5f574f";
+
+            // tiny highlight
+            ctx.fillStyle = "#2b2b2b";
             ctx.fillRect(x * TILE + 2, y * TILE + 2, TILE - 4, TILE - 4);
           }
 
+          // Door
           if (getDoorAt(roomIndex, x, y)) {
-            ctx.fillStyle = "#1d2b53";
+            ctx.fillStyle = "#1b1b1b";
             ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-            ctx.fillStyle = "#ffccaa";
+            ctx.fillStyle = "#c7a24a";
             ctx.fillRect(x * TILE + 3, y * TILE + 4, TILE - 6, TILE - 6);
-            ctx.fillStyle = "#ab5236";
+            ctx.fillStyle = "#8b6a22";
             ctx.fillRect(x * TILE + 6, y * TILE + 7, 2, 2);
           }
 
           if (roomIndex === 3 && room3Visited && x === ROOM4_BUTTON.x && y === ROOM4_BUTTON.y) {
-            ctx.fillStyle = "#1d2b53";
+            ctx.fillStyle = "#1b1b1b";
             ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-            ctx.fillStyle = room4ButtonActive ? "#00e436" : "#ff004d";
+            ctx.fillStyle = room4ButtonActive ? "#2fe36f" : "#ff5a5a";
             ctx.fillRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
-            ctx.fillStyle = "#000000";
+            ctx.fillStyle = "#111";
             ctx.fillRect(x * TILE + 7, y * TILE + 7, 2, 2);
           }
 
+          // Grid lines (optional vibe)
           ctx.strokeStyle = "rgba(0,0,0,0.10)";
           ctx.strokeRect(x * TILE, y * TILE, TILE, TILE);
         }
       }
 
+      drawRoomNumber(roomLabel, floorShade);
+
       // Draw player (simple 12x12 sprite centered in tile)
       const px = player.x * TILE;
-      const hopPhase = 1 - Math.min(1, hopTimer / HOP_DURATION);
-      const hopOffset = hopTimer > 0 ? Math.round(Math.sin(hopPhase * Math.PI) * 2) : 0;
-      const py = player.y * TILE - hopOffset - 1;
+      const py = player.y * TILE;
 
-      const hopScale = hopTimer > 0 ? 1 - (hopOffset / 6) : 1;
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
-      ctx.beginPath();
-      ctx.ellipse(
-        px + TILE / 2,
-        player.y * TILE + TILE,
-        6 * hopScale,
-        2 * hopScale,
-        0,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
+      ctx.fillStyle = "#0b0b0b";
+      ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
 
-      if (playerImgReady) {
-        ctx.save();
-        ctx.translate(px + (facing === -1 ? TILE : 0), py);
-        ctx.scale(facing, 1);
-        ctx.drawImage(playerImg, 0, 0, TILE, TILE);
-        ctx.restore();
-      } else {
-        ctx.fillStyle = "#ff004d";
-        ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+      ctx.fillStyle = "#f8f8f8";
+      ctx.fillRect(px + 4, py + 4, TILE - 8, TILE - 8);
 
-        ctx.fillStyle = "#fff1e8";
-        ctx.fillRect(px + 4, py + 4, TILE - 8, TILE - 8);
-
-        // “face” dot
-        ctx.fillStyle = "#1d2b53";
-        ctx.fillRect(px + 10, py + 6, 2, 2);
-      }
+      // “face” dot
+      ctx.fillStyle = "#0b0b0b";
+      ctx.fillRect(px + 10, py + 6, 2, 2);
 
       if (transition.alpha > 0) {
         ctx.fillStyle = `rgba(0,0,0,${transition.alpha})`;
@@ -625,7 +561,7 @@
       "9": ["111","101","111","001","111"],
     };
 
-    function drawRoomNumber(text, base, shade) {
+    function drawRoomNumber(text, shade) {
       const digitW = 3;
       const digitH = 5;
       const gap = 1;
@@ -640,13 +576,8 @@
         for (let gy = 0; gy < digitH; gy++) {
           for (let gx = 0; gx < digitW; gx++) {
             if (glyph[gy][gx] === "1") {
-              const tx = ox + gx;
-              const ty = startY + gy;
-              if (rooms[roomIndex][ty][tx] !== 0) continue;
-              ctx.fillStyle = base;
-              ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
               ctx.fillStyle = shade;
-              ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+              ctx.fillRect((ox + gx) * TILE, (startY + gy) * TILE, TILE, TILE);
             }
           }
         }
