@@ -12,17 +12,15 @@
       --scale: 3;         /* pixel upscaling */
       --room-px: calc(var(--tile) * var(--grid));
       --room-scale: calc(var(--room-px) * var(--scale));
-      --ui-ink: #f7f7f7;
-      --ui-paper: #111;
-      --board-ink: #111;
-      --board-paper: #fff;
+      --ink: #111;
+      --paper: #f7f7f7;
     }
 
     html, body {
       height: 100%;
       margin: 0;
-      background: var(--ui-paper);
-      color: var(--ui-ink);
+      background: var(--paper);
+      color: var(--ink);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       user-select: none;
     }
@@ -51,10 +49,10 @@
     }
 
     .panel {
-      border: 2px solid var(--ui-ink);
+      border: 2px solid var(--ink);
       padding: 12px 14px;
-      background: var(--ui-paper);
-      box-shadow: 6px 6px 0 var(--ui-ink);
+      background: #fff;
+      box-shadow: 6px 6px 0 var(--ink);
     }
 
     @media (max-width: 720px) {
@@ -67,9 +65,9 @@
     .screen {
       width: var(--room-scale);
       height: var(--room-scale);
-      border: 3px solid var(--board-ink);
-      background: var(--board-paper);
-      box-shadow: 10px 10px 0 var(--board-ink);
+      border: 3px solid var(--ink);
+      background: #fff;
+      box-shadow: 10px 10px 0 var(--ink);
       image-rendering: pixelated;
       position: relative;
     }
@@ -89,11 +87,10 @@
 
     .kbd {
       display: inline-block;
-      border: 1px solid var(--board-ink);
+      border: 1px solid var(--ink);
       padding: 1px 6px;
-      background: var(--board-paper);
-      color: var(--board-ink);
-      box-shadow: 2px 2px 0 var(--board-ink);
+      background: #fff;
+      box-shadow: 2px 2px 0 var(--ink);
       margin: 0 2px;
     }
 
@@ -115,10 +112,9 @@
     .ctrl-btn {
       width: 66px;
       height: 66px;
-      border: 2px solid var(--board-ink);
-      background: var(--board-paper);
-      color: var(--board-ink);
-      box-shadow: 3px 3px 0 var(--board-ink);
+      border: 2px solid var(--ink);
+      background: #fff;
+      box-shadow: 3px 3px 0 var(--ink);
       font-size: 30px;
       line-height: 1;
       cursor: pointer;
@@ -128,7 +124,7 @@
 
     .ctrl-btn:active {
       transform: translate(1px, 1px);
-      box-shadow: 2px 2px 0 var(--board-ink);
+      box-shadow: 2px 2px 0 var(--ink);
     }
 
     #room6-debug
@@ -188,15 +184,6 @@
     const GRID = 9;
     const W = TILE * GRID;
     const H = TILE * GRID;
-    const WALL_OUTER = "#0b0b0b";
-    const WALL_INNER = "#2a2a2a";
-    const DOOR_INNER = "#e2e2e2";
-    const DOOR_KNOB = "#111111";
-    const FADE_BASE = "#111111";
-    const TORCH_COLOR = "17,17,17";
-    const TORCH_RADIUS = TILE * 1.2;
-    const TORCH_FALLOFF = TILE * 7.0;
-    const TORCH_DARKNESS = 0.7;
 
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
@@ -215,13 +202,6 @@
     let playerImgReady = false;
     playerImg.onload = () => {
       playerImgReady = true;
-    };
-
-    const dogImg = new Image();
-    dogImg.src = "dog.png";
-    let dogImgReady = false;
-    dogImg.onload = () => {
-      dogImgReady = true;
     };
 
     const treeImg = new Image();
@@ -257,35 +237,17 @@
       return room;
     }
 
-    const GRASS_FLOOR = "#239063";
-    const TUFT_DARK = "#165a4c";
-    const TUFT_LIGHT = "#1ebc73";
     const roomDefs = [
       {
         label: 1,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          flower: "#ff77a8",
-          flowerCenter: "#ffec27",
-          seedMod: 7,
-          seedSalt: 0,
-        },
+        floor: "#239063",
         doors: [
           { x: MID, y: 0, target: 1, spawnX: MID, spawnY: GRID - 2 },
         ],
       },
       {
         label: 2,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          flower: "#29adff",
-          flowerCenter: "#fff1e8",
-          seedMod: 9,
-        },
+        floor: "#00e436",
         doors: [
           { x: MID, y: GRID - 1, target: 0, spawnX: MID, spawnY: 1 },
           { x: 0, y: MID, target: 2, spawnX: GRID - 2, spawnY: MID },
@@ -294,12 +256,7 @@
       },
       {
         label: 3,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          seedMod: 9,
-        },
+        floor: "#ffec27",
         doors: [
           { x: GRID - 1, y: MID, target: 1, spawnX: 1, spawnY: MID },
           { x: MID, y: GRID - 1, target: 5, spawnX: MID, spawnY: 1 },
@@ -307,26 +264,14 @@
       },
       {
         label: 4,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          flower: "#b14eff",
-          flowerCenter: "#ffec27",
-          seedMod: 11,
-        },
+        floor: "#ff77a8",
         doors: [
           { x: 0, y: MID, target: 1, spawnX: GRID - 2, spawnY: MID },
         ],
       },
       {
         label: 6,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          seedMod: 9,
-        },
+        floor: "#83769c",
         doors: [
           { x: MID, y: GRID - 1, target: 1, spawnX: MID, spawnY: 1 },
           { x: MID, y: 0, target: 0, spawnX: MID, spawnY: GRID - 2 },
@@ -334,14 +279,7 @@
       },
       {
         label: 7,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          flower: "#ff004d",
-          flowerCenter: "#fff1e8",
-          seedMod: 9,
-        },
+        floor: "#ffccaa",
         doors: [
           { x: MID, y: 0, target: 2, spawnX: MID, spawnY: GRID - 2 },
           { x: GRID - 1, y: MID, target: 0, spawnX: 1, spawnY: MID },
@@ -349,38 +287,21 @@
       },
       {
         label: 8,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          seedMod: 9,
-        },
+        floor: "#7e2553",
         doors: [
           { x: GRID - 1, y: MID, target: 0, spawnX: 1, spawnY: MID },
         ],
       },
       {
         label: 9,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          flower: "#ff77a8",
-          flowerCenter: "#fff1e8",
-          seedMod: 11,
-        },
+        floor: "#c2c3c7",
         doors: [
           { x: MID, y: GRID - 1, target: 4, spawnX: MID, spawnY: 1 },
         ],
       },
       {
         label: 10,
-        floor: GRASS_FLOOR,
-        foliage: {
-          tuftDark: TUFT_DARK,
-          tuftLight: TUFT_LIGHT,
-          seedMod: 9,
-        },
+        floor: "#ab5236",
         doors: [
           { x: MID, y: GRID - 1, target: 4, spawnX: MID, spawnY: 1 },
         ],
@@ -408,11 +329,6 @@
       // for smooth-ish movement later we could add px coords;
       // keep it tile-based for this MVP
     };
-    const dog = {
-      x: 6,
-      y: 4,
-    };
-    let dogFacing = 1;
 
     const keys = new Set();
     let queuedMove = null;
@@ -452,17 +368,12 @@
       btn.addEventListener("pointercancel", clearHeld);
     });
 
-    function isSolidAt(rIndex, tx, ty, allowDoor) {
-      if (tx < 0 || ty < 0 || tx >= GRID || ty >= GRID) return true;
-      if (getDoorAt(rIndex, tx, ty)) return !allowDoor;
-      if (rIndex === 0 && room1TreeBlocks.has(`${tx},${ty}`)) return true;
-      if (rIndex === 0 && tx === dog.x && ty === dog.y) return true;
-      if (rIndex === 8 && room10Watermelon && tx === MID && ty === MID) return true;
-      return rooms[rIndex][ty][tx] === 1;
-    }
-
     function isSolid(tx, ty) {
-      return isSolidAt(roomIndex, tx, ty, true);
+      if (tx < 0 || ty < 0 || tx >= GRID || ty >= GRID) return true;
+      if (getDoorAt(roomIndex, tx, ty)) return false;
+      if (roomIndex === 0 && room1TreeBlocks.has(`${tx},${ty}`)) return true;
+      if (roomIndex === 8 && room10Watermelon && tx === MID && ty === MID) return true;
+      return rooms[roomIndex][ty][tx] === 1;
     }
 
     // Move once per key press repeat is fine for MVP; add cooldown for “grid step” feel.
@@ -470,12 +381,6 @@
     const MOVE_DELAY = 90; // ms
     const HOP_DURATION = 120; // ms
     let hopTimer = 0;
-    let dogHopTimer = 0;
-    let dogCooldown = 0;
-    let dogStepsLeft = 0;
-    const DOG_MOVE_DELAY = 240; // ms
-    const DOG_PAUSE_MIN = 500; // ms
-    const DOG_PAUSE_MAX = 1200; // ms
 
     // Simple fade transition state
     const transition = {
@@ -502,42 +407,6 @@
       last = now;
 
       if (!transition.active) {
-        if (roomIndex === 0) {
-          dogCooldown -= dt;
-          if (dogCooldown <= 0) {
-            if (dogStepsLeft <= 0) {
-              dogStepsLeft = 2 + Math.floor(Math.random() * 4);
-              dogCooldown = DOG_PAUSE_MIN + Math.random() * (DOG_PAUSE_MAX - DOG_PAUSE_MIN);
-            } else {
-              const dirs = [
-                { dx: 1, dy: 0 },
-                { dx: -1, dy: 0 },
-                { dx: 0, dy: 1 },
-                { dx: 0, dy: -1 },
-              ];
-              for (let i = dirs.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
-              }
-              for (const dir of dirs) {
-                const nx = dog.x + dir.dx;
-                const ny = dog.y + dir.dy;
-                if (nx === player.x && ny === player.y) continue;
-                if (isSolidAt(0, nx, ny, false)) continue;
-                if (nx !== dog.x) {
-                  dogFacing = nx > dog.x ? 1 : -1;
-                }
-                dog.x = nx;
-                dog.y = ny;
-                dogStepsLeft -= 1;
-                dogHopTimer = HOP_DURATION;
-                break;
-              }
-              dogCooldown = DOG_MOVE_DELAY;
-            }
-          }
-        }
-
         moveCooldown -= dt;
         if (moveCooldown <= 0) {
           let dx =
@@ -615,9 +484,6 @@
 
       if (hopTimer > 0) {
         hopTimer = Math.max(0, hopTimer - dt);
-      }
-      if (dogHopTimer > 0) {
-        dogHopTimer = Math.max(0, dogHopTimer - dt);
       }
 
       draw();
@@ -699,62 +565,30 @@
 
       drawRoomNumber(roomLabel, floorBase, numberShade, roomDefs[roomIndex].label === 1);
 
-      if (roomDefs[roomIndex].foliage) {
-        const foliage = roomDefs[roomIndex].foliage;
-        const seedMod = foliage.seedMod ?? 9;
-        const seedSalt = foliage.seedSalt ?? roomDefs[roomIndex].label * 13;
-        const seedSpread = foliage.seedSpread ?? 37;
+      if (roomDefs[roomIndex].label === 1) {
         for (let y = 0; y < GRID; y++) {
           for (let x = 0; x < GRID; x++) {
             const t = rooms[roomIndex][y][x];
             if (t !== 0) continue;
-            if (roomDefs[roomIndex].label === 1) {
-              const seed = (x * 29 + y * 53) % 7;
-              if (seed <= 2 && foliage.tuftDark) {
-                ctx.fillStyle = foliage.tuftDark;
-                ctx.fillRect(x * TILE + 2, y * TILE + 3, 2, 2);
-                ctx.fillRect(x * TILE + 10, y * TILE + 8, 2, 2);
-              } else if (seed === 3 && foliage.tuftLight) {
-                ctx.fillStyle = foliage.tuftLight;
-                ctx.fillRect(x * TILE + 6, y * TILE + 2, 1, 3);
-                ctx.fillRect(x * TILE + 9, y * TILE + 10, 1, 2);
-              } else if (seed === 4 && foliage.tuftDark) {
-                ctx.fillStyle = foliage.tuftDark;
-                ctx.fillRect(x * TILE + 4, y * TILE + 9, 1, 3);
-                ctx.fillRect(x * TILE + 5, y * TILE + 8, 1, 2);
-                ctx.fillRect(x * TILE + 6, y * TILE + 9, 1, 3);
-              } else if (seed === 5 && foliage.flower) {
-                ctx.fillStyle = foliage.flower;
-                ctx.fillRect(x * TILE + 6, y * TILE + 6, 2, 2);
-                if (foliage.flowerCenter) {
-                  ctx.fillStyle = foliage.flowerCenter;
-                  ctx.fillRect(x * TILE + 7, y * TILE + 7, 1, 1);
-                }
-              }
-            } else {
-              const hash = (x * 73 + y * 151 + seedSalt * 11) % seedSpread;
-              const seed = (x * 29 + y * 53 + seedSalt + hash * 3) % seedMod;
-              if (seed <= 2 && foliage.tuftDark && hash % 2 !== 0) {
-                ctx.fillStyle = foliage.tuftDark;
-                ctx.fillRect(x * TILE + 2, y * TILE + 3, 2, 2);
-                ctx.fillRect(x * TILE + 10, y * TILE + 8, 2, 2);
-              } else if (seed <= 3 && foliage.tuftLight && hash % 3 !== 1) {
-                ctx.fillStyle = foliage.tuftLight;
-                ctx.fillRect(x * TILE + 6, y * TILE + 2, 1, 3);
-                ctx.fillRect(x * TILE + 9, y * TILE + 10, 1, 2);
-              } else if (seed === 4 && foliage.tuftDark && hash % 5 !== 2) {
-                ctx.fillStyle = foliage.tuftDark;
-                ctx.fillRect(x * TILE + 4, y * TILE + 9, 1, 3);
-                ctx.fillRect(x * TILE + 5, y * TILE + 8, 1, 2);
-                ctx.fillRect(x * TILE + 6, y * TILE + 9, 1, 3);
-              } else if (seed === 5 && foliage.flower && hash % 7 === 0) {
-                ctx.fillStyle = foliage.flower;
-                ctx.fillRect(x * TILE + 6, y * TILE + 6, 2, 2);
-                if (foliage.flowerCenter) {
-                  ctx.fillStyle = foliage.flowerCenter;
-                  ctx.fillRect(x * TILE + 7, y * TILE + 7, 1, 1);
-                }
-              }
+            const seed = (x * 29 + y * 53) % 7;
+            if (seed <= 2) {
+              ctx.fillStyle = "#165a4c";
+              ctx.fillRect(x * TILE + 2, y * TILE + 3, 2, 2);
+              ctx.fillRect(x * TILE + 10, y * TILE + 8, 2, 2);
+            } else if (seed === 3) {
+              ctx.fillStyle = "#1ebc73";
+              ctx.fillRect(x * TILE + 6, y * TILE + 2, 1, 3);
+              ctx.fillRect(x * TILE + 9, y * TILE + 10, 1, 2);
+            } else if (seed === 4) {
+              ctx.fillStyle = "#165a4c";
+              ctx.fillRect(x * TILE + 4, y * TILE + 9, 1, 3);
+              ctx.fillRect(x * TILE + 5, y * TILE + 8, 1, 2);
+              ctx.fillRect(x * TILE + 6, y * TILE + 9, 1, 3);
+            } else if (seed === 5) {
+              ctx.fillStyle = "#ff77a8";
+              ctx.fillRect(x * TILE + 6, y * TILE + 6, 2, 2);
+              ctx.fillStyle = "#ffec27";
+              ctx.fillRect(x * TILE + 7, y * TILE + 7, 1, 1);
             }
           }
         }
@@ -767,36 +601,6 @@
         ctx.drawImage(treeImg, TILE * 6, TILE * 6, TILE * 2, TILE * 2);
       }
 
-      if (roomDefs[roomIndex].label === 1) {
-        const dx = dog.x * TILE;
-        const dogHopPhase = 1 - Math.min(1, dogHopTimer / HOP_DURATION);
-        const dogHopOffset = dogHopTimer > 0 ? Math.round(Math.sin(dogHopPhase * Math.PI) * 2) : 0;
-        const dy = dog.y * TILE - dogHopOffset - 1;
-        const dogHopScale = dogHopTimer > 0 ? 1 - (dogHopOffset / 6) : 1;
-        ctx.fillStyle = "rgba(0,0,0,0.25)";
-        ctx.beginPath();
-        ctx.ellipse(
-          dx + TILE / 2,
-          dog.y * TILE + TILE,
-          6 * dogHopScale,
-          2 * dogHopScale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-        if (dogImgReady) {
-          ctx.save();
-          ctx.translate(dx + (dogFacing === -1 ? TILE : 0), dy);
-          ctx.scale(dogFacing, 1);
-          ctx.drawImage(dogImg, 0, 0, TILE, TILE);
-          ctx.restore();
-        } else {
-          ctx.fillStyle = "#fff1e8";
-          ctx.fillRect(dx + 2, dy + 2, TILE - 4, TILE - 4);
-        }
-      }
-
       if (roomDefs[roomIndex].label === 10 && room10Watermelon && watermelonImgReady) {
         ctx.drawImage(watermelonImg, MID * TILE, MID * TILE, TILE, TILE);
       }
@@ -807,9 +611,9 @@
           const t = rooms[roomIndex][y][x];
 
           if (t === 1) {
-            ctx.fillStyle = WALL_OUTER;
+            ctx.fillStyle = "#1d2b53";
             ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-            ctx.fillStyle = WALL_INNER;
+            ctx.fillStyle = "#5f574f";
             ctx.fillRect(x * TILE + 2, y * TILE + 2, TILE - 4, TILE - 4);
 
             if (roomDefs[roomIndex].label === 6 && y === 4 && (x === 3 || x === 5)) {
@@ -830,16 +634,16 @@
           }
 
           if (getDoorAt(roomIndex, x, y)) {
-            ctx.fillStyle = WALL_OUTER;
+            ctx.fillStyle = "#1d2b53";
             ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-            ctx.fillStyle = DOOR_INNER;
+            ctx.fillStyle = "#ffccaa";
             ctx.fillRect(x * TILE + 3, y * TILE + 4, TILE - 6, TILE - 6);
-            ctx.fillStyle = DOOR_KNOB;
+            ctx.fillStyle = "#ab5236";
             ctx.fillRect(x * TILE + 6, y * TILE + 7, 2, 2);
           }
 
           if (roomIndex === 3 && room3Visited && x === ROOM4_BUTTON.x && y === ROOM4_BUTTON.y) {
-            ctx.fillStyle = WALL_OUTER;
+            ctx.fillStyle = "#1d2b53";
             ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
             ctx.fillStyle = room4ButtonActive ? "#00e436" : "#ff004d";
             ctx.fillRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
@@ -890,28 +694,8 @@
         ctx.fillRect(px + 10, py + 6, 2, 2);
       }
 
-      const playerCenterX = px + TILE / 2;
-      const playerCenterY = player.y * TILE + TILE / 2 - hopOffset;
-      ctx.save();
-      const torchGradient = ctx.createRadialGradient(
-        playerCenterX,
-        playerCenterY,
-        TORCH_RADIUS,
-        playerCenterX,
-        playerCenterY,
-        TORCH_FALLOFF
-      );
-      torchGradient.addColorStop(0, `rgba(${TORCH_COLOR},0)`);
-      torchGradient.addColorStop(0.35, `rgba(${TORCH_COLOR},${TORCH_DARKNESS * 0.18})`);
-      torchGradient.addColorStop(0.6, `rgba(${TORCH_COLOR},${TORCH_DARKNESS * 0.45})`);
-      torchGradient.addColorStop(0.8, `rgba(${TORCH_COLOR},${TORCH_DARKNESS * 0.7})`);
-      torchGradient.addColorStop(1, `rgba(${TORCH_COLOR},${TORCH_DARKNESS})`);
-      ctx.fillStyle = torchGradient;
-      ctx.fillRect(0, 0, W, H);
-      ctx.restore();
-
       if (transition.alpha > 0) {
-        ctx.fillStyle = `rgba(17,17,17,${transition.alpha})`;
+        ctx.fillStyle = `rgba(0,0,0,${transition.alpha})`;
         ctx.fillRect(0, 0, W, H);
       }
 
