@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Housefinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #141312;
+      --paper: #f4efe7;
+      --sand: #e5d7c2;
+      --charcoal: #2d2a27;
+      --saffron: #f2b061;
+      --sage: #7b9e93;
+      --steel: #5a5b66;
+      --shadow: 0 20px 50px rgba(20, 19, 18, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Mono", monospace;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 20%, rgba(242, 176, 97, 0.25), transparent 55%),
+        radial-gradient(circle at 85% 15%, rgba(123, 158, 147, 0.25), transparent 55%),
+        linear-gradient(140deg, #f8f1e7, #f1e2cf 55%, #f8e7d6);
+      display: grid;
+      place-items: center;
+      padding: 32px 20px;
+    }
+
+    .cursor-hand {
+      position: fixed;
+      top: 0;
+      left: 0;
+      transform: translate(calc(var(--cursor-x, 0px) - 100px), calc(var(--cursor-y, 0px) - 60px)) scale(0.7);
+      transform-origin: top left;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .cursor-hidden {
+      cursor: none;
+    }
+
+    html,
+    body,
+    * {
+      cursor: none !important;
+    }
+
+    .listing-stack {
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+
+    .listing-stack::before,
+    .listing-stack::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 26px;
+      background: #fdf8f1;
+      border: 2px solid rgba(20, 19, 18, 0.08);
+      z-index: 0;
+    }
+
+    .listing-stack::before {
+      transform: translate(var(--stack-x1, 10px), var(--stack-y1, 10px)) rotate(var(--stack-r1, 1.2deg));
+      box-shadow: 0 14px 30px rgba(20, 19, 18, 0.12);
+    }
+
+    .listing-stack::after {
+      transform: translate(var(--stack-x2, -10px), var(--stack-y2, 18px)) rotate(var(--stack-r2, -1.4deg));
+      box-shadow: 0 10px 24px rgba(20, 19, 18, 0.1);
+    }
+
+    .listing {
+      width: min(900px, 100%);
+      background: var(--paper);
+      border-radius: 26px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      border: 2px solid rgba(20, 19, 18, 0.08);
+      display: grid;
+      gap: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .listing.back {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .listing.front {
+      z-index: 2;
+    }
+
+    .listing.dragging {
+      transition: none;
+    }
+
+    .listing.slide-out-right {
+      animation: slideOutRight 260ms ease-in forwards;
+    }
+
+    .listing.slide-out-left {
+      animation: slideOutLeft 260ms ease-in forwards;
+    }
+
+    .listing.slide-in-left {
+      animation: slideInLeft 320ms ease-out;
+    }
+
+    @keyframes slideOutRight {
+      from {
+        transform: translate(var(--slide-start-x, 0px), var(--slide-start-y, 0px)) rotate(var(--slide-start-rot, 0deg));
+      }
+      to {
+        transform: translate(120%, var(--slide-y, 0px)) rotate(var(--slide-rot, 0deg));
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOutLeft {
+      from {
+        transform: translate(var(--slide-start-x, 0px), var(--slide-start-y, 0px)) rotate(var(--slide-start-rot, 0deg));
+      }
+      to {
+        transform: translate(-120%, var(--slide-y, 0px)) rotate(var(--slide-rot, 0deg));
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        transform: translate(-120%, var(--slide-y, 0px)) rotate(var(--slide-rot, 0deg));
+        opacity: 1;
+      }
+      to {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 1;
+      }
+    }
+
+
+    
+
+    .carousel {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      width: min(980px, 100%);
+    }
+
+    .nav-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--charcoal);
+      background: #fffdf9;
+      color: var(--charcoal);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 20px rgba(20, 19, 18, 0.12);
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 22px rgba(20, 19, 18, 0.2);
+    }
+
+    .listing-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .layout {
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.7rem, 2.5vw, 2.3rem);
+      margin: 0;
+    }
+
+    .neighborhood {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      color: var(--steel);
+    }
+
+    .price {
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.6rem, 2.3vw, 2.1rem);
+      margin: 0;
+      color: var(--charcoal);
+    }
+
+    .body {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: minmax(180px, 1.1fr) minmax(200px, 1fr);
+      align-items: center;
+    }
+
+    .blueprint {
+      background: #fffdf9;
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 360px;
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.1fr 1.1fr 0.7fr;
+      grid-template-rows: 1.1fr 0.9fr 0.9fr;
+      gap: 6px;
+      padding-bottom: 40px;
+    }
+
+    
+
+    .bp-room {
+      border: 1px solid var(--charcoal);
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 0.7rem;
+      background: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      position: relative;
+    }
+
+    .bp-room strong {
+      display: block;
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+
+    .bp-ldk {
+      grid-column: 1 / 3;
+      grid-row: 1 / 2;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      background: rgba(123, 158, 147, 0.08);
+    }
+
+    .bp-entry {
+      grid-column: 3 / 4;
+      grid-row: 1 / 2;
+      text-align: center;
+    }
+
+    .bp-bath {
+      grid-column: 3 / 4;
+      grid-row: 2 / 3;
+      text-align: center;
+    }
+
+    .bp-toilet {
+      grid-column: 3 / 4;
+      grid-row: 3 / 4;
+      text-align: center;
+    }
+
+    .bp-room-a {
+      grid-column: 1 / 2;
+      grid-row: 2 / 4;
+      display: grid;
+      place-content: center;
+      text-align: center;
+    }
+
+    .bp-room-b {
+      grid-column: 2 / 3;
+      grid-row: 2 / 4;
+      display: grid;
+      place-content: center;
+      text-align: center;
+    }
+
+    .bp-closet {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      width: 70px;
+      height: 64px;
+      border: 2px solid var(--charcoal);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 0.6rem;
+      background: #fff;
+    }
+
+    .bp-room-c {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      width: 96px;
+      height: 88px;
+      border: 1px solid var(--charcoal);
+      border-radius: 10px;
+      padding: 6px;
+      font-size: 0.65rem;
+      background: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: grid;
+      place-content: center;
+      text-align: center;
+    }
+
+    .bp-balcony {
+      position: absolute;
+      left: 18px;
+      bottom: 14px;
+      width: calc(100% - 140px);
+      height: 22px;
+      border: 2px solid var(--charcoal);
+      border-radius: 8px;
+      background: rgba(242, 176, 97, 0.12);
+      display: grid;
+      place-items: center;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .bp-door {
+      position: absolute;
+      width: 18px;
+      height: 8px;
+      border: 2px solid var(--charcoal);
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+      background: #fffdf9;
+    }
+
+    .door-entry {
+      right: 34px;
+      top: 0;
+      transform: rotate(180deg);
+    }
+
+    .door-bath {
+      right: 32px;
+      top: 54%;
+      transform: rotate(-90deg);
+    }
+
+    .door-toilet {
+      right: 32px;
+      top: 77%;
+      transform: rotate(-90deg);
+    }
+
+    .details {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .details li {
+      background: #fffdf9;
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(90, 91, 102, 0.2);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.9rem;
+    }
+
+    .details span {
+      color: var(--steel);
+    }
+
+    @media (max-width: 720px) {
+      .body {
+        grid-template-columns: 1fr;
+      }
+
+      .carousel {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-btn {
+        width: 100%;
+        border-radius: 999px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <img src="hand.png" alt="" class="cursor-hand" id="cursor-hand" />
+  <div class="carousel">
+    <button class="nav-btn" id="prev-btn" aria-label="Previous listing">←</button>
+
+    <div class="listing-stack">
+      <section class="listing back" id="card-back" aria-hidden="true">
+        <div class="listing-header">
+          <div>
+            <h1 class="layout" id="layout-back">2LDK</h1>
+            <p class="neighborhood" id="neighborhood-back">Ebisu</p>
+          </div>
+          <p class="price" id="price-back">¥138,000</p>
+        </div>
+
+        <div class="body">
+          <div class="blueprint" id="blueprint-back"></div>
+
+          <ul class="details">
+            <li><span>Size</span><strong id="size-back">66 m²</strong></li>
+            <li><span>Direction</span><strong id="direction-back">South</strong></li>
+            <li><span>Station Distance</span><strong id="station-back">9 min</strong></li>
+            <li><span>Floor</span><strong id="floor-back">6 / 7F</strong></li>
+            <li><span>Building Age</span><strong id="age-back">1980</strong></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="listing front" id="card-front">
+      <div class="listing-header">
+        <div>
+          <h1 class="layout" id="layout">2LDK</h1>
+          <p class="neighborhood" id="neighborhood">Ebisu</p>
+        </div>
+        <p class="price" id="price">¥138,000</p>
+      </div>
+
+      <div class="body">
+        <div class="blueprint" id="blueprint"></div>
+
+        <ul class="details">
+          <li><span>Size</span><strong id="size">66 m²</strong></li>
+          <li><span>Direction</span><strong id="direction">South</strong></li>
+          <li><span>Station Distance</span><strong id="station">9 min</strong></li>
+          <li><span>Floor</span><strong id="floor">6 / 7F</strong></li>
+          <li><span>Building Age</span><strong id="age">1980</strong></li>
+        </ul>
+      </div>
+      </section>
+    </div>
+
+    <button class="nav-btn" id="next-btn" aria-label="Next listing">→</button>
+  </div>
+
+  <script>
+    const listings = [
+      {
+        layout: "2LDK",
+        neighborhood: "Ebisu",
+        price: "¥138,000",
+        size: "66 m²",
+        direction: "South",
+        station: "9 min",
+        floor: "6 / 7F",
+        age: "1980",
+        ldk: "~10J",
+        roomA: "~6J",
+        roomB: "~6J"
+      },
+      {
+        layout: "1K",
+        neighborhood: "Yoyogi",
+        price: "¥98,000",
+        size: "28 m²",
+        direction: "East",
+        station: "6 min",
+        floor: "3 / 5F",
+        age: "2004",
+        ldk: "~7J",
+        roomA: "~5J",
+        roomB: "~4J"
+      },
+      {
+        layout: "1LDK",
+        neighborhood: "Shibuya",
+        price: "¥176,000",
+        size: "42 m²",
+        direction: "South-East",
+        station: "4 min",
+        floor: "10 / 14F",
+        age: "2016",
+        ldk: "~12J",
+        roomA: "~6J",
+        roomB: "~5J"
+      },
+      {
+        layout: "3DK",
+        neighborhood: "Kichijoji",
+        price: "¥152,000",
+        size: "58 m²",
+        direction: "West",
+        station: "11 min",
+        floor: "2 / 4F",
+        age: "1993",
+        ldk: "~9J",
+        roomA: "~6J",
+        roomB: "~6J"
+      }
+    ];
+
+    let currentIndex = 0;
+
+    const layoutEl = document.getElementById("layout");
+    const neighborhoodEl = document.getElementById("neighborhood");
+    const priceEl = document.getElementById("price");
+    const sizeEl = document.getElementById("size");
+    const directionEl = document.getElementById("direction");
+    const stationEl = document.getElementById("station");
+    const floorEl = document.getElementById("floor");
+    const ageEl = document.getElementById("age");
+    const blueprintEl = document.getElementById("blueprint");
+    const layoutBackEl = document.getElementById("layout-back");
+    const neighborhoodBackEl = document.getElementById("neighborhood-back");
+    const priceBackEl = document.getElementById("price-back");
+    const sizeBackEl = document.getElementById("size-back");
+    const directionBackEl = document.getElementById("direction-back");
+    const stationBackEl = document.getElementById("station-back");
+    const floorBackEl = document.getElementById("floor-back");
+    const ageBackEl = document.getElementById("age-back");
+    const blueprintBackEl = document.getElementById("blueprint-back");
+
+    const blueprintTemplates = {
+      "1K": `
+        <span class="bp-door door-entry"></span>
+        <div class="bp-room bp-ldk">Main Room<strong>~7J</strong></div>
+        <div class="bp-room bp-entry">Entry<strong>Genkan</strong></div>
+        <div class="bp-room bp-bath">Bath<strong>Unit</strong></div>
+        <div class="bp-room bp-toilet">Toilet</div>
+        <div class="bp-room bp-room-a">Kitchen<strong>~2J</strong></div>
+        <div class="bp-balcony">Balcony</div>
+      `,
+      "1LDK": `
+        <span class="bp-door door-entry"></span>
+        <span class="bp-door door-bath"></span>
+        <div class="bp-room bp-ldk">Living / Dining / Kitchen<strong>~12J</strong></div>
+        <div class="bp-room bp-entry">Entry<strong>Genkan</strong></div>
+        <div class="bp-room bp-bath">Bath<strong>Unit</strong></div>
+        <div class="bp-room bp-toilet">Toilet</div>
+        <div class="bp-room bp-room-a">Bedroom<strong>~6J</strong></div>
+        <div class="bp-closet">WIC</div>
+        <div class="bp-balcony">Balcony</div>
+      `,
+      "2LDK": `
+        <span class="bp-door door-entry"></span>
+        <span class="bp-door door-bath"></span>
+        <span class="bp-door door-toilet"></span>
+        <div class="bp-room bp-ldk">Living / Dining / Kitchen<strong>~10J</strong></div>
+        <div class="bp-room bp-entry">Entry<strong>Genkan</strong></div>
+        <div class="bp-room bp-bath">Bath<strong>Unit</strong></div>
+        <div class="bp-room bp-toilet">Toilet</div>
+        <div class="bp-room bp-room-a">Room A<strong>~6J</strong></div>
+        <div class="bp-room bp-room-b">Room B<strong>~6J</strong></div>
+        <div class="bp-closet">Closet</div>
+        <div class="bp-balcony">Balcony</div>
+      `,
+      "3DK": `
+        <span class="bp-door door-entry"></span>
+        <span class="bp-door door-bath"></span>
+        <span class="bp-door door-toilet"></span>
+        <div class="bp-room bp-ldk">Dining / Kitchen<strong>~8J</strong></div>
+        <div class="bp-room bp-entry">Entry<strong>Genkan</strong></div>
+        <div class="bp-room bp-bath">Bath<strong>Unit</strong></div>
+        <div class="bp-room bp-toilet">Toilet</div>
+        <div class="bp-room bp-room-a">Room A<strong>~6J</strong></div>
+        <div class="bp-room bp-room-b">Room B<strong>~6J</strong></div>
+        <div class="bp-room-c">Room C<strong>~5J</strong></div>
+        <div class="bp-balcony">Balcony</div>
+      `
+    };
+
+    const randomStack = (maxOffset, maxRotate) => {
+      const rand = (range) => (Math.random() * range * 2 - range);
+      return {
+        x1: rand(maxOffset),
+        y1: rand(maxOffset),
+        r1: rand(maxRotate),
+        x2: rand(maxOffset),
+        y2: rand(maxOffset),
+        r2: rand(maxRotate)
+      };
+    };
+
+    const applyStack = () => {
+      const stack = randomStack(14, 2.2);
+      const root = document.documentElement;
+      root.style.setProperty("--stack-x1", `${stack.x1.toFixed(1)}px`);
+      root.style.setProperty("--stack-y1", `${stack.y1.toFixed(1)}px`);
+      root.style.setProperty("--stack-r1", `${stack.r1.toFixed(1)}deg`);
+      root.style.setProperty("--stack-x2", `${stack.x2.toFixed(1)}px`);
+      root.style.setProperty("--stack-y2", `${stack.y2.toFixed(1)}px`);
+      root.style.setProperty("--stack-r2", `${stack.r2.toFixed(1)}deg`);
+    };
+
+    const listingFront = document.getElementById("card-front");
+
+    const clearSlideClasses = () => {
+      listingFront.classList.remove("slide-out-right", "slide-out-left", "slide-in-left");
+    };
+
+    const renderCard = (listing, prefix) => {
+      const map = prefix === "back"
+        ? {
+            layout: layoutBackEl,
+            neighborhood: neighborhoodBackEl,
+            price: priceBackEl,
+            size: sizeBackEl,
+            direction: directionBackEl,
+            station: stationBackEl,
+            floor: floorBackEl,
+            age: ageBackEl,
+            blueprint: blueprintBackEl
+          }
+        : {
+            layout: layoutEl,
+            neighborhood: neighborhoodEl,
+            price: priceEl,
+            size: sizeEl,
+            direction: directionEl,
+            station: stationEl,
+            floor: floorEl,
+            age: ageEl,
+            blueprint: blueprintEl
+          };
+      map.layout.textContent = listing.layout;
+      map.neighborhood.textContent = listing.neighborhood;
+      map.price.textContent = listing.price;
+      map.size.textContent = listing.size;
+      map.direction.textContent = listing.direction;
+      map.station.textContent = listing.station;
+      map.floor.textContent = listing.floor;
+      map.age.textContent = listing.age;
+      map.blueprint.innerHTML = blueprintTemplates[listing.layout] || blueprintTemplates["2LDK"];
+    };
+
+    const renderListing = () => {
+      const listing = listings[currentIndex];
+      const nextListing = listings[(currentIndex + 1) % listings.length];
+      renderCard(listing, "front");
+      renderCard(nextListing, "back");
+    };
+
+    let isSliding = false;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragDeltaX = 0;
+    let dragDeltaY = 0;
+    let dragDeltaRot = 0;
+
+    const slideTo = (direction, fromDrag = false, exitSide = "right") => {
+      if (isSliding) return;
+      isSliding = true;
+      clearSlideClasses();
+      const slideY = (Math.random() * 70 - 35).toFixed(1);
+      const slideRot = (Math.random() * 12 - 6).toFixed(1);
+      const backIndex =
+        direction === "next"
+          ? (currentIndex + 1) % listings.length
+          : (currentIndex - 1 + listings.length) % listings.length;
+      listingFront.style.setProperty("--slide-y", `${slideY}px`);
+      listingFront.style.setProperty("--slide-rot", `${slideRot}deg`);
+      listingFront.style.setProperty("--slide-start-x", fromDrag ? `${dragDeltaX}px` : "0px");
+      listingFront.style.setProperty("--slide-start-y", fromDrag ? `${dragDeltaY}px` : "0px");
+      listingFront.style.setProperty("--slide-start-rot", fromDrag ? `${dragDeltaRot}deg` : "0deg");
+
+      if (direction === "prev") {
+        currentIndex = (currentIndex - 1 + listings.length) % listings.length;
+        renderCard(listings[currentIndex], "front");
+        renderCard(listings[(currentIndex + 1) % listings.length], "back");
+        listingFront.classList.add("slide-in-left");
+        listingFront.addEventListener("animationend", () => {
+          clearSlideClasses();
+          isSliding = false;
+        }, { once: true });
+        return;
+      }
+
+      renderCard(listings[backIndex], "back");
+      listingFront.classList.add(exitSide === "left" ? "slide-out-left" : "slide-out-right");
+
+      const handleOut = () => {
+        listingFront.removeEventListener("animationend", handleOut);
+        currentIndex =
+          direction === "next"
+            ? (currentIndex + 1) % listings.length
+            : (currentIndex - 1 + listings.length) % listings.length;
+        const nextListing = listings[(currentIndex + 1) % listings.length];
+        renderCard(listings[currentIndex], "front");
+        renderCard(nextListing, "back");
+        clearSlideClasses();
+        isSliding = false;
+      };
+
+      listingFront.addEventListener("animationend", handleOut);
+    };
+
+    document.getElementById("prev-btn").addEventListener("click", () => slideTo("prev"));
+    document.getElementById("next-btn").addEventListener("click", () => slideTo("next"));
+
+    const resetDrag = () => {
+      listingFront.style.transition = "transform 220ms ease";
+      listingFront.style.transform = "translate(0, 0)";
+      listingFront.addEventListener("transitionend", () => {
+        listingFront.style.transition = "";
+      }, { once: true });
+    };
+
+    listingFront.addEventListener("pointerdown", (event) => {
+      if (isSliding) return;
+      isDragging = true;
+      dragStartX = event.clientX;
+      dragDeltaX = 0;
+      listingFront.classList.add("dragging");
+      listingFront.setPointerCapture(event.pointerId);
+    });
+
+    listingFront.addEventListener("pointermove", (event) => {
+      if (!isDragging) return;
+      dragDeltaX = event.clientX - dragStartX;
+      dragDeltaY = Math.max(-18, Math.min(18, dragDeltaX * 0.12));
+      dragDeltaRot = Math.max(-6, Math.min(6, dragDeltaX * 0.03));
+      listingFront.style.transform = `translate(${dragDeltaX}px, ${dragDeltaY}px) rotate(${dragDeltaRot}deg)`;
+    });
+
+    const endDrag = (event) => {
+      if (!isDragging) return;
+      isDragging = false;
+      listingFront.classList.remove("dragging");
+      listingFront.releasePointerCapture(event.pointerId);
+      if (dragDeltaX > 140) {
+        listingFront.style.transform = "";
+        slideTo("next", true, "right");
+      } else if (dragDeltaX < -140) {
+        listingFront.style.transform = "";
+        slideTo("next", true, "left");
+      } else {
+        resetDrag();
+      }
+    };
+
+    listingFront.addEventListener("pointerup", endDrag);
+    listingFront.addEventListener("pointercancel", endDrag);
+
+    const cursorHand = document.getElementById("cursor-hand");
+    document.body.classList.add("cursor-hidden");
+
+    let cursorQueued = false;
+    let cursorX = 0;
+    let cursorY = 0;
+
+    const updateCursor = () => {
+      cursorQueued = false;
+      cursorHand.style.setProperty("--cursor-x", `${cursorX}px`);
+      cursorHand.style.setProperty("--cursor-y", `${cursorY}px`);
+    };
+
+    const queueCursor = (event) => {
+      cursorX = event.clientX;
+      cursorY = event.clientY;
+      if (!cursorQueued) {
+        cursorQueued = true;
+        requestAnimationFrame(updateCursor);
+      }
+    };
+
+    document.addEventListener("mousemove", queueCursor);
+    document.addEventListener("pointermove", queueCursor);
+
+
+    applyStack();
+    renderListing();
+  </script>
+</body>
+</html>
