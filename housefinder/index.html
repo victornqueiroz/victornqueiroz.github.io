@@ -30,6 +30,7 @@
       min-height: 100vh;
       font-family: "Space Mono", monospace;
       color: var(--ink);
+      overflow-x: hidden;
       background:
         radial-gradient(circle at 10% 20%, rgba(242, 176, 97, 0.25), transparent 55%),
         radial-gradient(circle at 85% 15%, rgba(123, 158, 147, 0.25), transparent 55%),
@@ -39,11 +40,536 @@
       padding: 32px 20px;
     }
 
+    .layout-shell {
+      width: min(1240px, 100%);
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) 90px;
+      gap: 24px;
+      align-items: start;
+      transition: transform 420ms ease;
+      position: relative;
+      z-index: 20;
+    }
+
+    .right-column {
+      display: grid;
+      gap: 18px;
+      align-items: start;
+      position: relative;
+      transform: scale(0.9);
+      transform-origin: top center;
+      z-index: 99;
+    }
+
+    .right-column.clients-view {
+      padding-top: 0;
+    }
+
+    .map-column {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+      transition: transform 420ms ease;
+      position: relative;
+      z-index: 15;
+    }
+
+    .map-column.is-hidden {
+      transform: translateX(140px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .map-coffee {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 272px;
+      height: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 440ms ease;
+      transform: translateX(80px);
+      z-index: 0;
+    }
+
+    .map-keys {
+      position: fixed;
+      top: 50%;
+      right: 0;
+      width: 240px;
+      height: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 440ms ease;
+      transform: translate(80px, -50%);
+      z-index: 0;
+    }
+
+    .map-pen {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 220px;
+      height: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 440ms ease;
+      transform: translateX(80px) rotate(30deg);
+      z-index: 0;
+    }
+
+    .map-tab {
+      width: 90px;
+      overflow: visible;
+      border: none;
+      background: none;
+      cursor: pointer;
+      position: relative;
+      z-index: 10;
+    }
+
+    .map-tab img {
+      width: 950px;
+      height: auto;
+      transform: translateX(-10px);
+      display: block;
+      position: relative;
+      z-index: 10;
+    }
+
+    .map-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 20;
+    }
+
+    .map-panel {
+      display: none;
+    }
+
+    .map-back-btn {
+      position: fixed;
+      left: 50%;
+      bottom: 32px;
+      transform: translateX(-50%);
+      padding: 12px 22px;
+      border-radius: 999px;
+      border: 2px solid var(--charcoal);
+      background: #fffdf9;
+      color: var(--charcoal);
+      font-size: 0.95rem;
+      letter-spacing: 0.6px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 20px rgba(20, 19, 18, 0.12);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      z-index: 21;
+    }
+
+    .map-back-btn.is-visible {
+      display: inline-flex;
+    }
+
+    .map-back-btn:hover {
+      transform: translateX(-50%) translateY(-2px);
+      box-shadow: 0 14px 22px rgba(20, 19, 18, 0.2);
+    }
+
+    body.map-open .layout-shell {
+      transform: translateX(-1060px);
+    }
+
+    body.map-open .map-column {
+      transform: translateX(80px);
+    }
+
+    body.map-open .map-coffee {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    body.map-open .map-keys {
+      opacity: 1;
+      transform: translate(0, -50%);
+    }
+
+    body.map-open .map-pen {
+      opacity: 1;
+      transform: translateX(0) rotate(30deg);
+    }
+
+    .listing-area {
+      border-radius: 22px;
+      padding: 16px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .selected-zone {
+      background: none;
+      padding: 0px 16px 16px 16px;
+      display: grid;
+      gap: 10px;
+      transition: transform 260ms ease-in, opacity 260ms ease-in;
+    }
+
+    .selected-zone.is-hidden {
+      transform: translateX(120%);
+      opacity: 0;
+      pointer-events: none;
+      max-height: 0;
+      padding: 0;
+      border-width: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .selected-zone h3 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: 1rem;
+      color: var(--charcoal);
+    }
+
+    .selected-slots {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .selected-mini {
+      border-radius: 14px;
+      background: #fffdf9;
+      border: 1px solid rgba(20, 19, 18, 0.12);
+      padding: 5px;
+      display: block;
+      min-height: 72px;
+      height: 120px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .selected-mini.is-match {
+      background: #d7f3dc;
+      border-color: rgba(47, 157, 87, 0.5);
+    }
+
+    .selected-mini.is-miss {
+      background: #f6d4d1;
+      border-color: rgba(191, 58, 48, 0.55);
+    }
+
+    .selected-mini .selected-clear {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(165, 27, 27, 0.8);
+      background: #d84a3a;
+      color: #fffdf9;
+      font-size: 1rem;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .selected-mini:hover .selected-clear {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 6px 16px rgba(20, 19, 18, 0.2);
+    }
+
+    .selected-mini .selected-clear:hover {
+      background: #b73327;
+      box-shadow: 0 8px 18px rgba(165, 27, 27, 0.35);
+      transform: scale(1.08);
+    }
+
+    .selected-mini .listing-mini {
+      width: 900px;
+      transform: scale(0.24);
+      transform-origin: top left;
+      pointer-events: none;
+    }
+
+    .drop-ghost {
+      outline: 3px solid #2f9d57;
+      box-shadow: 0 0 0 6px rgba(47, 157, 87, 0.18);
+      border-radius: 26px;
+    }
+
+    .client-panel {
+      background: var(--paper);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 2px solid rgba(20, 19, 18, 0.08);
+      display: grid;
+      gap: 14px;
+      width: 100%;
+      margin-top:80px;
+      position: relative;
+    }
+
+    .client-panel.primary {
+      transform: translateX(-6px) rotate(-1.2deg);
+    }
+
+    .client-panel.primary.selected {
+      border-color: var(--charcoal);
+      background: #f5b0a9;
+      box-shadow: 0 22px 38px rgba(20, 19, 18, 0.28);
+      outline: 3px solid rgba(20, 19, 18, 0.35);
+      outline-offset: 2px;
+      transform: translateX(-6px) rotate(-1.2deg) translateY(-6px) scale(1.02);
+      z-index: 2;
+    }
+
+    .client-panel::before,
+    .client-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      background: #fdf8f1;
+      border: 2px solid rgba(20, 19, 18, 0.08);
+      z-index: -1;
+    }
+
+    .client-panel.no-stack::before,
+    .client-panel.no-stack::after {
+      display: none;
+    }
+
+    .client-panel::before {
+      transform: translate(8px, 10px) rotate(1deg);
+      box-shadow: 0 12px 26px rgba(20, 19, 18, 0.12);
+    }
+
+    .client-panel::after {
+      transform: translate(-8px, 16px) rotate(-1.2deg);
+      box-shadow: 0 10px 22px rgba(20, 19, 18, 0.1);
+    }
+
+    .client-actions {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+      transform: translateY(30px);
+    }
+
+    .client-actions.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .client-gallery {
+      margin-top: 0;
+      display: none;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-gallery.is-visible {
+      display: grid;
+    }
+
+    .client-gallery.is-visible .client-panel {
+      animation: clientReveal 420ms ease-out both;
+    }
+
+    .client-gallery.is-visible .client-panel:nth-child(1) {
+      animation-delay: 40ms;
+    }
+
+    .client-gallery.is-visible .client-panel:nth-child(2) {
+      animation-delay: 110ms;
+    }
+
+    .client-gallery.is-visible .client-panel:nth-child(3) {
+      animation-delay: 180ms;
+    }
+
+    .client-gallery.is-hiding .client-panel {
+      animation: clientHide 130ms ease-in both;
+    }
+
+    .client-gallery.is-hiding .client-panel:nth-child(1) {
+      animation-delay: 140ms;
+    }
+
+    .client-gallery.is-hiding .client-panel:nth-child(2) {
+      animation-delay: 70ms;
+    }
+
+    .client-gallery.is-hiding .client-panel:nth-child(3) {
+      animation-delay: 0ms;
+    }
+
+    @keyframes clientReveal {
+      from {
+        transform: translateX(-30px) translateY(10px) rotate(0deg);
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes clientHide {
+      from {
+        opacity: 1;
+      }
+      to {
+        transform: translateX(-30px) translateY(10px) rotate(0deg);
+        opacity: 0;
+      }
+    }
+    .client-panel.card {
+      padding: 16px;
+      height: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .client-panel.card::before,
+    .client-panel.card::after {
+      display: none;
+    }
+
+    .client-panel.card.selected {
+      border-color: var(--charcoal);
+      background: #f5b0a9;
+      box-shadow: 0 22px 38px rgba(20, 19, 18, 0.28);
+      outline: 3px solid rgba(20, 19, 18, 0.35);
+      outline-offset: 2px;
+      transform: translateY(-6px) scale(1.02);
+      z-index: 2;
+    }
+
+    .client-panel.card:not(.selected):hover {
+      transform: translateY(-9px) scale(1.01);
+      box-shadow: 0 22px 36px rgba(20, 19, 18, 0.26);
+    }
+
+    .client-panel.primary:not(.selected).hoverable:hover {
+      transform: translateX(-6px) rotate(-1.2deg) translateY(-8px) scale(1.01);
+      box-shadow: 0 22px 36px rgba(20, 19, 18, 0.26);
+    }
+
+    .client-panel.card .client-title {
+      font-size: 1.05rem;
+    }
+
+    .client-panel.card .client-desc {
+      font-size: 0.85rem;
+    }
+
+    .client-panel.card .client-reqs {
+      gap: 8px;
+    }
+
+    .client-panel.card .client-reqs li {
+      font-size: 0.8rem;
+      padding: 8px 10px;
+    }
+
+    .client-panel.tilt-a {
+      transform: rotate(-2.6deg);
+    }
+
+    .client-panel.tilt-b {
+      transform: rotate(2.2deg);
+    }
+
+    .client-panel.tilt-c {
+      transform: rotate(-1.8deg);
+    }
+    .client-photo-wrap {
+      width: 100%;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background-color: white;
+    }
+
+    .client-photo {
+      width: 50%;
+      display: block;
+      object-fit: cover;
+      aspect-ratio: 4 / 5;
+    }
+
+    .client-title {
+      font-family: "Fraunces", serif;
+      font-size: 1.2rem;
+      margin: 0;
+    }
+
+    .client-desc {
+      margin: 0;
+      color: var(--steel);
+      font-size: 0.9rem;
+    }
+
+    .client-reqs {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .client-reqs li {
+      background: #fffdf9;
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(90, 91, 102, 0.2);
+      font-size: 0.85rem;
+    }
+
+    .client-reqs li.req-miss {
+      background: #f6d4d1;
+      border-color: rgba(191, 58, 48, 0.55);
+      color: #7a1f1a;
+    }
+
+    .client-btn {
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 2px solid var(--charcoal);
+      background: #fffdf9;
+      color: var(--charcoal);
+      font-size: 0.9rem;
+      letter-spacing: 0.6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 20px rgba(20, 19, 18, 0.12);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .client-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 22px rgba(20, 19, 18, 0.2);
+    }
+
     .cursor-hand {
       position: fixed;
       top: 0;
       left: 0;
-      transform: translate(calc(var(--cursor-x, 0px) - 100px), calc(var(--cursor-y, 0px) - 60px)) scale(0.7);
+      transform: translate(calc(var(--cursor-x, 0px) - 100px), calc(var(--cursor-y, 0px) - 60px + var(--cursor-press, 0px))) scale(0.7);
       transform-origin: top left;
       pointer-events: none;
       z-index: 9999;
@@ -90,7 +616,7 @@
       width: min(900px, 100%);
       background: var(--paper);
       border-radius: 26px;
-      padding: 28px;
+      padding: 22px;
       box-shadow: var(--shadow);
       border: 2px solid rgba(20, 19, 18, 0.08);
       display: grid;
@@ -162,23 +688,108 @@
 
     .carousel {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr);
       align-items: center;
       gap: 16px;
       width: min(980px, 100%);
+      position: relative;
+      transition: transform 260ms ease-in, opacity 260ms ease-in;
     }
 
-    .nav-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
+    .carousel.is-hidden {
+      transform: translateX(120%);
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+    }
+    .listing-stack {
+      width: min(900px, 100%);
+    }
+
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      width: min(900px, 100%);
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 42px);
+    }
+
+    .debug-index {
+      visibility: hidden;
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: rgba(20, 19, 18, 0.8);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      letter-spacing: 0.4px;
+      z-index: 9999;
+    }
+
+    .countdown {
+      visibility: hidden;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2.6rem, 4vw, 3.6rem);
+      letter-spacing: 1px;
+      color: var(--charcoal);
+      background: rgba(255, 253, 249, 0.8);
+      border: 2px solid rgba(20, 19, 18, 0.15);
+      border-radius: 999px;
+      padding: 8px 18px;
+      box-shadow: 0 12px 26px rgba(20, 19, 18, 0.18);
+      z-index: 9999;
+    }
+
+    .back-btn {
+      position: fixed;
+      left: 50%;
+      bottom: 32px;
+      transform: translateX(-50%);
+      padding: 12px 22px;
+      border-radius: 999px;
       border: 2px solid var(--charcoal);
       background: #fffdf9;
       color: var(--charcoal);
-      font-size: 1.2rem;
+      font-size: 0.95rem;
+      letter-spacing: 0.6px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 20px rgba(20, 19, 18, 0.12);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      z-index: 10;
+    }
+
+    .back-btn.is-visible {
+      display: inline-flex;
+    }
+
+    .back-btn:hover {
+      transform: translateX(-50%) translateY(-2px);
+      box-shadow: 0 14px 22px rgba(20, 19, 18, 0.2);
+    }
+
+    .nav-btn {
+      padding: 12px 22px;
+      border-radius: 999px;
+      border: 2px solid var(--charcoal);
+      background: #fffdf9;
+      color: var(--charcoal);
+      font-size: 0.95rem;
+      letter-spacing: 0.6px;
       cursor: pointer;
-      display: grid;
-      place-items: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       box-shadow: 0 10px 20px rgba(20, 19, 18, 0.12);
     }
@@ -186,6 +797,29 @@
     .nav-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 14px 22px rgba(20, 19, 18, 0.2);
+    }
+
+    .send-btn {
+      padding: 14px 26px;
+      border-radius: 999px;
+      border: 2px solid #4f2c14;
+      background: #f2b061;
+      color: #3a2315;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 22px rgba(79, 44, 20, 0.25);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-2px);
+      background: #f5c284;
+      box-shadow: 0 16px 26px rgba(79, 44, 20, 0.28);
     }
 
     .listing-header {
@@ -233,6 +867,25 @@
       grid-template-rows: 1.1fr 0.9fr 0.9fr;
       gap: 6px;
       padding-bottom: 40px;
+    }
+
+    .blueprint.image-plan {
+      padding-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .blueprint img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    .blueprint.image-plan img {
+      width: 50%;
+      height: 50%;
     }
 
     
@@ -397,6 +1050,10 @@
     }
 
     @media (max-width: 720px) {
+      .layout-shell {
+        grid-template-columns: 1fr;
+      }
+
       .body {
         grid-template-columns: 1fr;
       }
@@ -414,63 +1071,152 @@
 </head>
 <body>
   <img src="hand.png" alt="" class="cursor-hand" id="cursor-hand" />
-  <div class="carousel">
-    <button class="nav-btn" id="prev-btn" aria-label="Previous listing">←</button>
-
-    <div class="listing-stack">
-      <section class="listing back" id="card-back" aria-hidden="true">
-        <div class="listing-header">
-          <div>
-            <h1 class="layout" id="layout-back">2LDK</h1>
-            <p class="neighborhood" id="neighborhood-back">Ebisu</p>
-          </div>
-          <p class="price" id="price-back">¥138,000</p>
+  <div class="layout-shell" id="layout-shell">
+    <div>
+      <aside class="client-panel primary" data-name="Maya" data-desc="Just started a first full-time job. Wants something simple, reasonable, and not too far." data-req1="Rent ≤ ¥95,000" data-req2="Commute to Shinjuku ≤ 40 min" data-req3="Station distance ≤ 10 min" data-req4="South-facing preferred" data-req5="Top floor preferred" data-img="client01.png">
+        <div class="client-photo-wrap">
+          <img src="client01.png" alt="Client profile" class="client-photo" />
         </div>
-
-        <div class="body">
-          <div class="blueprint" id="blueprint-back"></div>
-
-          <ul class="details">
-            <li><span>Size</span><strong id="size-back">66 m²</strong></li>
-            <li><span>Direction</span><strong id="direction-back">South</strong></li>
-            <li><span>Station Distance</span><strong id="station-back">9 min</strong></li>
-            <li><span>Floor</span><strong id="floor-back">6 / 7F</strong></li>
-            <li><span>Building Age</span><strong id="age-back">1980</strong></li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="listing front" id="card-front">
-      <div class="listing-header">
-        <div>
-          <h1 class="layout" id="layout">2LDK</h1>
-          <p class="neighborhood" id="neighborhood">Ebisu</p>
-        </div>
-        <p class="price" id="price">¥138,000</p>
-      </div>
-
-      <div class="body">
-        <div class="blueprint" id="blueprint"></div>
-
-        <ul class="details">
-          <li><span>Size</span><strong id="size">66 m²</strong></li>
-          <li><span>Direction</span><strong id="direction">South</strong></li>
-          <li><span>Station Distance</span><strong id="station">9 min</strong></li>
-          <li><span>Floor</span><strong id="floor">6 / 7F</strong></li>
-          <li><span>Building Age</span><strong id="age">1980</strong></li>
+        <h2 class="client-title">Maya</h2>
+        <p class="client-desc">Just started a first full-time job. Wants something simple, reasonable, and not too far.</p>
+        <ul class="client-reqs">
+          <li>Rent ≤ ¥95,000</li>
+          <li>Commute to Shinjuku ≤ 40 min</li>
+          <li>Station distance ≤ 10 min</li>
         </ul>
+      </aside>
+      <div class="client-actions">
+        <button class="client-btn" id="view-clients-btn">View all clients</button>
       </div>
-      </section>
     </div>
 
-    <button class="nav-btn" id="next-btn" aria-label="Next listing">→</button>
+    <div class="right-column">
+      <div class="listing-area">
+        <div class="selected-zone" id="selected-zone">
+          <h3 id="selected-title">Selected</h3>
+          <div class="selected-slots" id="selected-slots">
+            <div class="selected-mini"></div>
+            <div class="selected-mini"></div>
+            <div class="selected-mini"></div>
+          </div>
+        </div>
+        <div class="carousel" id="carousel">
+          <div class="listing-stack">
+            <section class="listing back" id="card-back" aria-hidden="true">
+              <div class="listing-header">
+                <div>
+                  <h1 class="layout" id="layout-back">2LDK</h1>
+                  <p class="neighborhood" id="neighborhood-back">Ebisu</p>
+                </div>
+                <p class="price" id="price-back">¥138,000</p>
+              </div>
+
+              <div class="body">
+                <div class="blueprint" id="blueprint-back"></div>
+
+                <ul class="details">
+                  <li><span>Size</span><strong id="size-back">66 m²</strong></li>
+                  <li><span>Direction</span><strong id="direction-back">South</strong></li>
+                  <li><span>Station Distance</span><strong id="station-back">9 min</strong></li>
+                  <li><span>Floor</span><strong id="floor-back">6 / 7F</strong></li>
+                  <li><span>Building Age</span><strong id="age-back">1980</strong></li>
+                </ul>
+              </div>
+            </section>
+
+            <section class="listing front" id="card-front">
+            <div class="listing-header">
+              <div>
+                <h1 class="layout" id="layout">2LDK</h1>
+                <p class="neighborhood" id="neighborhood">Ebisu</p>
+              </div>
+              <p class="price" id="price">¥138,000</p>
+            </div>
+
+            <div class="body">
+              <div class="blueprint" id="blueprint"></div>
+
+              <ul class="details">
+                <li><span>Size</span><strong id="size">66 m²</strong></li>
+                <li><span>Direction</span><strong id="direction">South</strong></li>
+                <li><span>Station Distance</span><strong id="station">9 min</strong></li>
+                <li><span>Floor</span><strong id="floor">6 / 7F</strong></li>
+                <li><span>Building Age</span><strong id="age">1980</strong></li>
+              </ul>
+            </div>
+            </section>
+          </div>
+          <div class="nav-row">
+            <button class="nav-btn" id="prev-btn" aria-label="Previous listing">PREVIOUS</button>
+            <button class="send-btn" id="send-btn" aria-label="Send apartments">SEND APARTMENTS</button>
+            <button class="nav-btn" id="next-btn" aria-label="Next listing">NEXT</button>
+          </div>
+        </div>
+      </div>
+      <div class="client-gallery" id="client-gallery">
+        <article class="client-panel card tilt-a" data-name="Ken" data-desc="Moving in with her dog and wants a solid commute." data-req1="Pet friendly" data-req2="Rent ≤ ¥120,000" data-req3="Commute ≤ 35 min" data-req4="South-facing preferred" data-req5="Quiet street" data-img="client02.png">
+          <div class="client-photo-wrap">
+            <img src="client02.png" alt="Client profile" class="client-photo" />
+          </div>
+          <h2 class="client-title">Ken</h2>
+          <p class="client-desc">Moving in with her dog and wants a solid commute.</p>
+          <ul class="client-reqs">
+            <li>Pet friendly</li>
+            <li>Rent ≤ ¥120,000</li>
+            <li>Commute ≤ 35 min</li>
+          </ul>
+        </article>
+        <article class="client-panel card tilt-b" data-name="Aoi" data-desc="Busy schedule, wants maximum convenience." data-req1="Commute to Shinagawa ≤ 15 min" data-req2="Station distance ≤ 5 min" data-req3="Furnished preferred" data-req4="South-facing preferred" data-req5="Newer than 2010" data-img="client03.png">
+          <div class="client-photo-wrap">
+            <img src="client03.png" alt="Client profile" class="client-photo" />
+          </div>
+          <h2 class="client-title">Aoi</h2>
+          <p class="client-desc">Busy schedule, wants maximum convenience.</p>
+          <ul class="client-reqs">
+            <li>Commute to Shinagawa ≤ 15 min</li>
+            <li>Station distance ≤ 5 min</li>
+            <li>Furnished preferred</li>
+          </ul>
+        </article>
+        <article class="client-panel card tilt-c" data-name="Judy" data-desc="Quiet home base with good light for remote work." data-req1="Rent ≤ ¥110,000" data-req2="South-facing or South-East" data-req3="Station distance ≤ 12 min" data-req4="Top floor preferred" data-req5="Quiet street" data-img="client04.png">
+          <div class="client-photo-wrap">
+            <img src="client04.png" alt="Client profile" class="client-photo" />
+          </div>
+          <h2 class="client-title">Judy</h2>
+          <p class="client-desc">Quiet home base with good light for remote work.</p>
+          <ul class="client-reqs">
+            <li>Rent ≤ ¥110,000</li>
+            <li>South-facing or South-East</li>
+            <li>Station distance ≤ 12 min</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+    <aside class="map-column">
+      <button class="map-tab" id="map-tab" aria-label="Open map">
+        <img src="map01.png" alt="City map preview" />
+      </button>
+    </aside>
   </div>
+  <div class="map-overlay" id="map-overlay" aria-hidden="true">
+    <div class="map-panel" id="map-panel">
+      <img src="map01.png" alt="City map" />
+    </div>
+  </div>
+  <button class="back-btn" id="back-btn">BACK</button>
+  <button class="map-back-btn" id="map-back-btn">BACK</button>
+  <img src="coffee.png" alt="" class="map-coffee" />
+  <img src="keys.png" alt="" class="map-keys" />
+  <img src="pen.png" alt="" class="map-pen" />
+  <div class="countdown" id="countdown">60</div>
+  <div class="debug-index" id="debug-index">Index: 0</div>
 
   <script>
     const listings = [
       {
+        id: "L01",
         layout: "2LDK",
-        neighborhood: "Ebisu",
+        neighborhood: "Shinjuku",
         price: "¥138,000",
         size: "66 m²",
         direction: "South",
@@ -479,11 +1225,14 @@
         age: "1980",
         ldk: "~10J",
         roomA: "~6J",
-        roomB: "~6J"
+        roomB: "~6J",
+        petFriendly: false,
+        furnished: false,
       },
       {
+        id: "L02",
         layout: "1K",
-        neighborhood: "Yoyogi",
+        neighborhood: "Shibuya",
         price: "¥98,000",
         size: "28 m²",
         direction: "East",
@@ -492,11 +1241,14 @@
         age: "2004",
         ldk: "~7J",
         roomA: "~5J",
-        roomB: "~4J"
+        roomB: "~4J",
+        petFriendly: false,
+        furnished: false,
       },
       {
+        id: "L03",
         layout: "1LDK",
-        neighborhood: "Shibuya",
+        neighborhood: "Ebisu",
         price: "¥176,000",
         size: "42 m²",
         direction: "South-East",
@@ -505,11 +1257,14 @@
         age: "2016",
         ldk: "~12J",
         roomA: "~6J",
-        roomB: "~5J"
+        roomB: "~5J",
+        petFriendly: false,
+        furnished: false,
       },
       {
+        id: "L04",
         layout: "3DK",
-        neighborhood: "Kichijoji",
+        neighborhood: "Shinagawa",
         price: "¥152,000",
         size: "58 m²",
         direction: "West",
@@ -518,7 +1273,335 @@
         age: "1993",
         ldk: "~9J",
         roomA: "~6J",
-        roomB: "~6J"
+        roomB: "~6J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L05",
+        layout: "1K",
+        neighborhood: "Ginza",
+        price: "¥82,000",
+        size: "23 m²",
+        direction: "South",
+        station: "9 min",
+        floor: "3 / 3F",
+        age: "1998",
+        ldk: "~7J",
+        roomA: "~4J",
+        roomB: "~3J",
+        topFloor: true,
+        quietStreet: true,
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L06",
+        layout: "1DK",
+        neighborhood: "Asakusa",
+        price: "¥110,000",
+        size: "31 m²",
+        direction: "South",
+        station: "5 min",
+        floor: "6 / 6F",
+        age: "2012",
+        ldk: "~8J",
+        roomA: "~5J",
+        roomB: "~4J",
+        petFriendly: true,
+        topFloor: true,
+        quietStreet: true,
+        furnished: false,
+      },
+      {
+        id: "L07",
+        layout: "1LDK",
+        neighborhood: "Ikebukuro",
+        price: "¥148,000",
+        size: "38 m²",
+        direction: "South",
+        station: "6 min",
+        floor: "7 / 10F",
+        age: "2015",
+        ldk: "~11J",
+        roomA: "~5J",
+        roomB: "~4J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L08",
+        layout: "2DK",
+        neighborhood: "Shinjuku",
+        price: "¥132,000",
+        size: "46 m²",
+        direction: "East",
+        station: "12 min",
+        floor: "1 / 2F",
+        age: "2001",
+        ldk: "~9J",
+        roomA: "~6J",
+        roomB: "~5J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L09",
+        layout: "1K",
+        neighborhood: "Shibuya",
+        price: "¥105,000",
+        size: "26 m²",
+        direction: "North-East",
+        station: "4 min",
+        floor: "6 / 9F",
+        age: "2010",
+        ldk: "~6J",
+        roomA: "~4J",
+        roomB: "~3J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L10",
+        layout: "2LDK",
+        neighborhood: "Ebisu",
+        price: "¥145,000",
+        size: "55 m²",
+        direction: "South-East",
+        station: "8 min",
+        floor: "3 / 5F",
+        age: "2008",
+        ldk: "~12J",
+        roomA: "~6J",
+        roomB: "~6J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L11",
+        layout: "1LDK",
+        neighborhood: "Shinagawa",
+        price: "¥128,000",
+        size: "34 m²",
+        direction: "South",
+        station: "5 min",
+        floor: "6 / 8F",
+        age: "2013",
+        ldk: "~10J",
+        roomA: "~5J",
+        roomB: "~4J",
+        furnished: true,
+        petFriendly: false,
+      },
+      {
+        id: "L12",
+        layout: "3DK",
+        neighborhood: "Ginza",
+        price: "¥138,000",
+        size: "62 m²",
+        direction: "South-West",
+        station: "15 min",
+        floor: "2 / 4F",
+        age: "1996",
+        ldk: "~9J",
+        roomA: "~6J",
+        roomB: "~6J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L13",
+        layout: "1K",
+        neighborhood: "Asakusa",
+        price: "¥120,000",
+        size: "24 m²",
+        direction: "South",
+        station: "3 min",
+        floor: "9 / 12F",
+        age: "2018",
+        ldk: "~6J",
+        roomA: "~4J",
+        roomB: "~3J",
+        furnished: true,
+        petFriendly: false,
+      },
+      {
+        id: "L14",
+        layout: "2LDK",
+        neighborhood: "Ikebukuro",
+        price: "¥142,000",
+        size: "52 m²",
+        direction: "West",
+        station: "10 min",
+        floor: "3 / 4F",
+        age: "2004",
+        ldk: "~11J",
+        roomA: "~6J",
+        roomB: "~5J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L15",
+        layout: "1DK",
+        neighborhood: "Shinjuku",
+        price: "¥118,000",
+        size: "29 m²",
+        direction: "South-East",
+        station: "6 min",
+        floor: "5 / 9F",
+        age: "2011",
+        ldk: "~8J",
+        roomA: "~5J",
+        roomB: "~4J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L16",
+        layout: "1LDK",
+        neighborhood: "Shibuya",
+        price: "¥125,000",
+        size: "36 m²",
+        direction: "South",
+        station: "9 min",
+        floor: "4 / 7F",
+        age: "2010",
+        ldk: "~10J",
+        roomA: "~5J",
+        roomB: "~4J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L17",
+        layout: "2DK",
+        neighborhood: "Ebisu",
+        price: "¥108,000",
+        size: "44 m²",
+        direction: "North",
+        station: "14 min",
+        floor: "1 / 2F",
+        age: "1992",
+        ldk: "~8J",
+        roomA: "~6J",
+        roomB: "~5J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L18",
+        layout: "1K",
+        neighborhood: "Shinagawa",
+        price: "¥72,000",
+        size: "20 m²",
+        direction: "North",
+        station: "15 min",
+        floor: "2 / 3F",
+        age: "1985",
+        ldk: "~5J",
+        roomA: "~3J",
+        roomB: "~3J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L19",
+        layout: "3LDK",
+        neighborhood: "Ginza",
+        price: "¥188,000",
+        size: "68 m²",
+        direction: "South",
+        station: "7 min",
+        floor: "8 / 12F",
+        age: "2019",
+        ldk: "~14J",
+        roomA: "~6J",
+        roomB: "~6J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L20",
+        layout: "1DK",
+        neighborhood: "Asakusa",
+        price: "¥112,000",
+        size: "32 m²",
+        direction: "South-East",
+        station: "8 min",
+        floor: "3 / 5F",
+        age: "2007",
+        ldk: "~8J",
+        roomA: "~5J",
+        roomB: "~4J",
+        petFriendly: true,
+        quietStreet: true,
+        furnished: false,
+      },
+      {
+        id: "L21",
+        layout: "2LDK",
+        neighborhood: "Ikebukuro",
+        price: "¥210,000",
+        size: "60 m²",
+        direction: "South-West",
+        station: "4 min",
+        floor: "12 / 20F",
+        age: "2020",
+        ldk: "~13J",
+        roomA: "~6J",
+        roomB: "~6J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L22",
+        layout: "1K",
+        neighborhood: "Shinjuku",
+        price: "¥84,000",
+        size: "22 m²",
+        direction: "South",
+        station: "9 min",
+        floor: "4 / 4F",
+        age: "1999",
+        ldk: "~6J",
+        roomA: "~4J",
+        roomB: "~3J",
+        topFloor: true,
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L23",
+        layout: "2DK",
+        neighborhood: "Shibuya",
+        price: "¥96,000",
+        size: "40 m²",
+        direction: "West",
+        station: "18 min",
+        floor: "2 / 2F",
+        age: "1994",
+        ldk: "~8J",
+        roomA: "~5J",
+        roomB: "~5J",
+        petFriendly: false,
+        furnished: false,
+      },
+      {
+        id: "L24",
+        layout: "1LDK",
+        neighborhood: "Ebisu",
+        price: "¥165,000",
+        size: "41 m²",
+        direction: "South",
+        station: "5 min",
+        floor: "9 / 12F",
+        age: "2017",
+        ldk: "~11J",
+        roomA: "~5J",
+        roomB: "~4J",
+        petFriendly: false,
+        furnished: false,
       }
     ];
 
@@ -554,15 +1637,7 @@
         <div class="bp-balcony">Balcony</div>
       `,
       "1LDK": `
-        <span class="bp-door door-entry"></span>
-        <span class="bp-door door-bath"></span>
-        <div class="bp-room bp-ldk">Living / Dining / Kitchen<strong>~12J</strong></div>
-        <div class="bp-room bp-entry">Entry<strong>Genkan</strong></div>
-        <div class="bp-room bp-bath">Bath<strong>Unit</strong></div>
-        <div class="bp-room bp-toilet">Toilet</div>
-        <div class="bp-room bp-room-a">Bedroom<strong>~6J</strong></div>
-        <div class="bp-closet">WIC</div>
-        <div class="bp-balcony">Balcony</div>
+        <img src="apt01.png" alt="1LDK floor plan" />
       `,
       "2LDK": `
         <span class="bp-door door-entry"></span>
@@ -616,6 +1691,7 @@
     };
 
     const listingFront = document.getElementById("card-front");
+    const listingBack = document.getElementById("card-back");
 
     const clearSlideClasses = () => {
       listingFront.classList.remove("slide-out-right", "slide-out-left", "slide-in-left");
@@ -653,22 +1729,174 @@
       map.station.textContent = listing.station;
       map.floor.textContent = listing.floor;
       map.age.textContent = listing.age;
+      map.blueprint.classList.toggle("image-plan", listing.layout === "1LDK");
       map.blueprint.innerHTML = blueprintTemplates[listing.layout] || blueprintTemplates["2LDK"];
     };
 
     const renderListing = () => {
+      ensureCurrentAvailable();
+      const nextIndex = getNextAvailableIndex(currentIndex, 1);
+      const backIndex = nextIndex === -1 ? currentIndex : nextIndex;
       const listing = listings[currentIndex];
-      const nextListing = listings[(currentIndex + 1) % listings.length];
+      const nextListing = listings[backIndex];
       renderCard(listing, "front");
       renderCard(nextListing, "back");
+      if (debugIndex) {
+        updateDebugIndex();
+      }
+    };
+
+    const debugIndex = document.getElementById("debug-index");
+
+    const updateDebugIndex = () => {
+      debugIndex.textContent = `Index: ${currentIndex} (${listings[currentIndex].layout})`;
+    };
+
+    const advanceListing = () => {
+      const nextIndex = getNextAvailableIndex(currentIndex + 1, 1);
+      if (nextIndex === -1) {
+        return;
+      }
+      currentIndex = nextIndex;
+      renderListing();
+    };
+
+    let currentClientName = "Maya";
+    const selectedByClient = {};
+    const selectedTitle = document.getElementById("selected-title");
+    const removedListingIds = new Set();
+
+    const getSelectedList = (clientName) => {
+      if (!selectedByClient[clientName]) {
+        selectedByClient[clientName] = [null, null, null];
+      }
+      return selectedByClient[clientName];
+    };
+
+    const updateSelectedTitle = () => {
+      if (!selectedTitle) return;
+      selectedTitle.textContent = `Selected for ${currentClientName}`;
+    };
+
+    const setCurrentClient = (clientName) => {
+      currentClientName = clientName;
+      selectedListings = getSelectedList(clientName);
+      updateSelectedTitle();
+      renderSelected();
     };
 
     let isSliding = false;
     let isDragging = false;
     let dragStartX = 0;
+    let dragStartY = 0;
     let dragDeltaX = 0;
     let dragDeltaY = 0;
     let dragDeltaRot = 0;
+    let selectedListings = [null, null, null];
+
+    const getNextAvailableIndex = (startIndex, step = 1) => {
+      if (!listings.length) return -1;
+      for (let offset = 0; offset < listings.length; offset += 1) {
+        const index = (startIndex + step * offset + listings.length) % listings.length;
+        if (!removedListingIds.has(listings[index].id)) {
+          return index;
+        }
+      }
+      return -1;
+    };
+
+    const ensureCurrentAvailable = () => {
+      if (!listings.length) return;
+      if (!removedListingIds.has(listings[currentIndex].id)) return;
+      const nextIndex = getNextAvailableIndex(currentIndex, 1);
+      if (nextIndex !== -1) {
+        currentIndex = nextIndex;
+      }
+    };
+
+    const isListingSelectedAnywhere = (listingId) => {
+      return Object.values(selectedByClient).some((list) =>
+        list.some((item) => item && item.listing.id === listingId)
+      );
+    };
+
+    const parseNumber = (value) => {
+      const match = value.match(/[\d,]+/);
+      return match ? Number(match[0].replace(/,/g, "")) : null;
+    };
+
+    const getClientRequirements = (clientName) => {
+      const panel = document.querySelector(`[data-name="${clientName}"]`);
+      if (!panel) return [];
+      return [panel.dataset.req1, panel.dataset.req2, panel.dataset.req3].filter(Boolean);
+    };
+
+    const revealClientHiddenRequirements = (clientName, selections) => {
+      const panel = document.querySelector(`[data-name="${clientName}"]`);
+      if (!panel) return;
+      const reqs = [panel.dataset.req1, panel.dataset.req2, panel.dataset.req3, panel.dataset.req4, panel.dataset.req5]
+        .filter(Boolean);
+      const list = panel.querySelector(".client-reqs");
+      if (!list) return;
+      list.innerHTML = "";
+      reqs.forEach((req) => {
+        const li = document.createElement("li");
+        li.textContent = req;
+        const isMet = selections.some((item) => item && listingMeetsRequirement(item.listing, req));
+        if (!isMet) {
+          li.classList.add("req-miss");
+        }
+        list.appendChild(li);
+      });
+    };
+
+    const listingMeetsRequirement = (listing, requirement) => {
+      if (!requirement) return true;
+      const lower = requirement.toLowerCase();
+      if (lower.includes("rent")) {
+        const limit = parseNumber(requirement);
+        const price = parseNumber(listing.price);
+        return limit !== null && price !== null && price <= limit;
+      }
+      if (lower.includes("station distance")) {
+        const limit = parseNumber(requirement);
+        const minutes = parseNumber(listing.station);
+        return limit !== null && minutes !== null && minutes <= limit;
+      }
+      if (lower.includes("commute")) {
+        const limit = parseNumber(requirement);
+        const minutes = parseNumber(listing.station);
+        return limit !== null && minutes !== null && minutes <= limit;
+      }
+      if (lower.includes("south")) {
+        return listing.direction.toLowerCase().includes("south");
+      }
+      if (lower.includes("top floor")) {
+        if (listing.topFloor === true) return true;
+        const match = listing.floor.match(/(\d+)\s*\/\s*(\d+)/);
+        if (!match) return false;
+        return match[1] == match[2];
+      }
+      if (lower.includes("quiet street")) {
+        return listing.quietStreet === true;
+      }
+      if (lower.includes("newer than")) {
+        const year = parseNumber(requirement);
+        const listingYear = parseNumber(listing.age);
+        return year !== null && listingYear !== null && listingYear >= year;
+      }
+      if (lower.includes("pet friendly")) {
+        return listing.petFriendly === true;
+      }
+      if (lower.includes("furnished")) {
+        return listing.furnished === true;
+      }
+      return false;
+    };
+
+    const listingMeetsAllRequirements = (listing, requirements) => {
+      return requirements.every((req) => listingMeetsRequirement(listing, req));
+    };
 
     const slideTo = (direction, fromDrag = false, exitSide = "right") => {
       if (isSliding) return;
@@ -676,10 +1904,14 @@
       clearSlideClasses();
       const slideY = (Math.random() * 70 - 35).toFixed(1);
       const slideRot = (Math.random() * 12 - 6).toFixed(1);
-      const backIndex =
-        direction === "next"
-          ? (currentIndex + 1) % listings.length
-          : (currentIndex - 1 + listings.length) % listings.length;
+      const backIndex = getNextAvailableIndex(
+        direction === "next" ? currentIndex + 1 : currentIndex - 1,
+        direction === "next" ? 1 : -1
+      );
+      if (backIndex === -1) {
+        isSliding = false;
+        return;
+      }
       listingFront.style.setProperty("--slide-y", `${slideY}px`);
       listingFront.style.setProperty("--slide-rot", `${slideRot}deg`);
       listingFront.style.setProperty("--slide-start-x", fromDrag ? `${dragDeltaX}px` : "0px");
@@ -690,6 +1922,9 @@
         currentIndex = (currentIndex - 1 + listings.length) % listings.length;
         renderCard(listings[currentIndex], "front");
         renderCard(listings[(currentIndex + 1) % listings.length], "back");
+        if (debugIndex) {
+          updateDebugIndex();
+        }
         listingFront.classList.add("slide-in-left");
         listingFront.addEventListener("animationend", () => {
           clearSlideClasses();
@@ -703,13 +1938,20 @@
 
       const handleOut = () => {
         listingFront.removeEventListener("animationend", handleOut);
-        currentIndex =
-          direction === "next"
-            ? (currentIndex + 1) % listings.length
-            : (currentIndex - 1 + listings.length) % listings.length;
-        const nextListing = listings[(currentIndex + 1) % listings.length];
+        const nextIndex = getNextAvailableIndex(
+          direction === "next" ? currentIndex + 1 : currentIndex - 1,
+          direction === "next" ? 1 : -1
+        );
+        if (nextIndex !== -1) {
+          currentIndex = nextIndex;
+        }
+        const followingIndex = getNextAvailableIndex(currentIndex + 1, 1);
+        const nextListing = followingIndex === -1 ? listings[currentIndex] : listings[followingIndex];
         renderCard(listings[currentIndex], "front");
         renderCard(nextListing, "back");
+        if (debugIndex) {
+          updateDebugIndex();
+        }
         clearSlideClasses();
         isSliding = false;
       };
@@ -719,6 +1961,18 @@
 
     document.getElementById("prev-btn").addEventListener("click", () => slideTo("prev"));
     document.getElementById("next-btn").addEventListener("click", () => slideTo("next"));
+    document.getElementById("send-btn").addEventListener("click", () => {
+      const requirements = getClientRequirements(currentClientName);
+      const slots = document.querySelectorAll("#selected-slots .selected-mini");
+      slots.forEach((slot, index) => {
+        slot.classList.remove("is-match", "is-miss");
+        const item = selectedListings[index];
+        if (!item) return;
+        const isMatch = listingMeetsAllRequirements(item.listing, requirements);
+        slot.classList.add(isMatch ? "is-match" : "is-miss");
+      });
+      revealClientHiddenRequirements(currentClientName, selectedListings);
+    });
 
     const resetDrag = () => {
       listingFront.style.transition = "transform 220ms ease";
@@ -732,24 +1986,121 @@
       if (isSliding) return;
       isDragging = true;
       dragStartX = event.clientX;
+      dragStartY = event.clientY;
       dragDeltaX = 0;
+      dragDeltaY = 0;
       listingFront.classList.add("dragging");
       listingFront.setPointerCapture(event.pointerId);
+      document.addEventListener("pointermove", handlePointerMove);
+      document.addEventListener("pointerup", endDrag);
+      document.addEventListener("pointercancel", endDrag);
     });
 
-    listingFront.addEventListener("pointermove", (event) => {
+    const handlePointerMove = (event) => {
       if (!isDragging) return;
       dragDeltaX = event.clientX - dragStartX;
-      dragDeltaY = Math.max(-18, Math.min(18, dragDeltaX * 0.12));
+      dragDeltaY = event.clientY - dragStartY;
+      const clampedY = dragDeltaY;
       dragDeltaRot = Math.max(-6, Math.min(6, dragDeltaX * 0.03));
-      listingFront.style.transform = `translate(${dragDeltaX}px, ${dragDeltaY}px) rotate(${dragDeltaRot}deg)`;
-    });
+      const scale = dragDeltaY < 0 ? Math.max(0.3, 1 + dragDeltaY / 250) : 1;
+      listingFront.style.transform = `translate(${dragDeltaX}px, ${clampedY}px) rotate(${dragDeltaRot}deg) scale(${scale.toFixed(2)})`;
+    };
+
+    listingFront.addEventListener("pointermove", handlePointerMove);
+
+    const renderSelected = () => {
+      const slots = document.querySelectorAll("#selected-slots .selected-mini");
+      slots.forEach((slot, index) => {
+        const item = selectedListings[index];
+        slot.classList.remove("is-match", "is-miss");
+        if (!item) {
+          slot.innerHTML = "";
+          return;
+        }
+        slot.innerHTML = "";
+        slot.appendChild(item.mini);
+        const clearBtn = document.createElement("button");
+        clearBtn.type = "button";
+        clearBtn.className = "selected-clear";
+        clearBtn.setAttribute("aria-label", "Clear selected listing");
+        clearBtn.dataset.slot = String(index);
+        clearBtn.textContent = "X";
+        slot.appendChild(clearBtn);
+      });
+    };
+
+    const buildMiniCard = () => {
+      const clone = listingFront.cloneNode(true);
+      clone.classList.remove("front", "dragging", "slide-out-right", "slide-out-left", "slide-in-left");
+      clone.classList.add("listing-mini");
+      clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+      return clone;
+    };
+
+    const updateSlotHighlight = (activeIndex) => {
+      const slots = document.querySelectorAll("#selected-slots .selected-mini");
+      slots.forEach((slot, index) => {
+        slot.classList.toggle("highlight", index === activeIndex);
+      });
+    };
+
+    const trySelectListing = (slotIndex) => {
+      const current = listings[currentIndex];
+      if (selectedListings.some((item) => item && item.listing === current)) return true;
+      if (slotIndex < 0 || slotIndex > 2) return false;
+      if (selectedListings[slotIndex]) return false;
+      selectedListings[slotIndex] = { listing: current, mini: buildMiniCard() };
+      removedListingIds.add(current.id);
+      renderSelected();
+      return true;
+    };
 
     const endDrag = (event) => {
       if (!isDragging) return;
       isDragging = false;
       listingFront.classList.remove("dragging");
       listingFront.releasePointerCapture(event.pointerId);
+      listingFront.style.transition = "none";
+      listingFront.style.transform = "";
+      listingFront.style.opacity = "1";
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerup", endDrag);
+      document.removeEventListener("pointercancel", endDrag);
+      const selectedZone = document.getElementById("selected-zone");
+      const zoneRect = selectedZone.getBoundingClientRect();
+      const inZone = event.clientX >= zoneRect.left &&
+        event.clientX <= zoneRect.right &&
+        event.clientY >= zoneRect.top &&
+        event.clientY <= zoneRect.bottom;
+      let slotIndex = -1;
+      if (inZone) {
+        const slots = document.querySelectorAll("#selected-slots .selected-mini");
+        slots.forEach((slot, index) => {
+          const rect = slot.getBoundingClientRect();
+          if (event.clientX >= rect.left && event.clientX <= rect.right) {
+            slotIndex = index;
+          }
+        });
+      }
+      if (inZone) {
+        if (slotIndex === -1) {
+          const firstEmpty = selectedListings.findIndex((item) => item === null);
+          slotIndex = firstEmpty === -1 ? 2 : firstEmpty;
+        }
+        const didPlace = trySelectListing(slotIndex);
+        updateSlotHighlight(-1);
+        dragDeltaX = 0;
+        dragDeltaY = 0;
+        listingFront.style.transition = "none";
+        listingFront.style.transform = "translate(0, 0) scale(1)";
+        listingFront.style.opacity = "1";
+        if (didPlace) {
+          advanceListing();
+          return;
+        }
+        resetDrag();
+        return;
+      }
       if (dragDeltaX > 140) {
         listingFront.style.transform = "";
         slideTo("next", true, "right");
@@ -763,6 +2114,27 @@
 
     listingFront.addEventListener("pointerup", endDrag);
     listingFront.addEventListener("pointercancel", endDrag);
+    window.addEventListener("blur", () => {
+      if (isDragging) {
+        isDragging = false;
+        listingFront.classList.remove("dragging");
+        listingFront.style.transform = "";
+      }
+    });
+
+    document.getElementById("selected-slots").addEventListener("click", (event) => {
+      const button = event.target.closest(".selected-clear");
+      if (!button) return;
+      const slotIndex = Number(button.dataset.slot);
+      if (Number.isNaN(slotIndex)) return;
+      const removed = selectedListings[slotIndex];
+      selectedListings[slotIndex] = null;
+      if (removed && !isListingSelectedAnywhere(removed.listing.id)) {
+        removedListingIds.delete(removed.listing.id);
+      }
+      renderSelected();
+      renderListing();
+    });
 
     const cursorHand = document.getElementById("cursor-hand");
     document.body.classList.add("cursor-hidden");
@@ -788,10 +2160,175 @@
 
     document.addEventListener("mousemove", queueCursor);
     document.addEventListener("pointermove", queueCursor);
+    document.addEventListener("pointerdown", () => {
+      cursorHand.style.setProperty("--cursor-press", "10px");
+    });
+    document.addEventListener("pointerup", () => {
+      cursorHand.style.setProperty("--cursor-press", "0px");
+    });
+    document.addEventListener("pointercancel", () => {
+      cursorHand.style.setProperty("--cursor-press", "0px");
+    });
+
+    const viewClientsBtn = document.getElementById("view-clients-btn");
+    const backBtn = document.getElementById("back-btn");
+    const mapTab = document.getElementById("map-tab");
+    const mapOverlay = document.getElementById("map-overlay");
+    const mapBackBtn = document.getElementById("map-back-btn");
+    const layoutShell = document.getElementById("layout-shell");
+    const mapColumn = document.querySelector(".map-column");
+    const clientGallery = document.getElementById("client-gallery");
+    const carousel = document.getElementById("carousel");
+    const selectedZoneEl = document.getElementById("selected-zone");
+    const rightColumn = document.querySelector(".right-column");
+    const clientActions = document.querySelector(".client-actions");
+    const clientPanel = document.querySelector(".client-panel");
+    const primaryPanel = document.querySelector(".client-panel.primary");
+    let selectedClientCard = null;
+
+    const getClientData = (panel) => ({
+      name: panel.dataset.name,
+      desc: panel.dataset.desc,
+      req1: panel.dataset.req1,
+      req2: panel.dataset.req2,
+      req3: panel.dataset.req3,
+      img: panel.dataset.img
+    });
+
+    const setClientData = (panel, data) => {
+      panel.dataset.name = data.name;
+      panel.dataset.desc = data.desc;
+      panel.dataset.req1 = data.req1;
+      panel.dataset.req2 = data.req2;
+      panel.dataset.req3 = data.req3;
+      panel.dataset.img = data.img;
+
+      panel.querySelector(".client-photo").src = data.img;
+      panel.querySelector(".client-title").textContent = data.name;
+      panel.querySelector(".client-desc").textContent = data.desc;
+      const reqItems = panel.querySelectorAll(".client-reqs li");
+      if (reqItems[0]) reqItems[0].textContent = data.req1;
+      if (reqItems[1]) reqItems[1].textContent = data.req2;
+      if (reqItems[2]) reqItems[2].textContent = data.req3;
+    };
+
+    const syncGalleryHeight = () => {
+      clientGallery.style.minHeight = `${clientPanel.offsetHeight}px`;
+    };
+
+    viewClientsBtn.addEventListener("click", () => {
+      if (isSliding || isDragging) return;
+      carousel.classList.add("is-hidden");
+      selectedZoneEl.classList.add("is-hidden");
+      rightColumn.classList.add("clients-view");
+      clientGallery.classList.add("is-visible");
+      clientActions.classList.add("is-hidden");
+      backBtn.classList.add("is-visible");
+      if (mapColumn) {
+        mapColumn.classList.add("is-hidden");
+      }
+      document.querySelector(".client-panel.primary").classList.add("no-stack");
+      primaryPanel.classList.add("hoverable");
+      syncGalleryHeight();
+      selectClientCard(primaryPanel);
+      setCurrentClient(primaryPanel.dataset.name);
+    });
+
+    backBtn.addEventListener("click", () => {
+      clientGallery.classList.add("is-hiding");
+      setTimeout(() => {
+        clientGallery.classList.remove("is-visible");
+        clientGallery.classList.remove("is-hiding");
+        carousel.classList.remove("is-hidden");
+        selectedZoneEl.classList.remove("is-hidden");
+        rightColumn.classList.remove("clients-view");
+        clientActions.classList.remove("is-hidden");
+        backBtn.classList.remove("is-visible");
+        if (mapColumn) {
+          mapColumn.classList.remove("is-hidden");
+        }
+        document.querySelector(".client-panel.primary").classList.remove("no-stack");
+        primaryPanel.classList.remove("hoverable");
+        if (selectedClientCard && selectedClientCard !== primaryPanel) {
+          const primaryData = getClientData(primaryPanel);
+          const selectedData = getClientData(selectedClientCard);
+          setClientData(primaryPanel, selectedData);
+          setClientData(selectedClientCard, primaryData);
+        }
+        setCurrentClient(primaryPanel.dataset.name);
+        document.querySelectorAll(".client-panel.card, .client-panel.primary").forEach((panel) => {
+          panel.classList.remove("selected");
+        });
+        selectedClientCard = null;
+      }, 150);
+    });
+
+    const selectClientCard = (card) => {
+      selectedClientCard = card;
+      document.querySelectorAll(".client-panel.card, .client-panel.primary").forEach((panel) => {
+        panel.classList.toggle("selected", panel === card);
+      });
+    };
+
+    clientGallery.addEventListener("click", (event) => {
+      const card = event.target.closest(".client-panel.card");
+      if (!card) return;
+      selectClientCard(card);
+    });
+
+    primaryPanel.addEventListener("click", (event) => {
+      if (!clientGallery.classList.contains("is-visible")) return;
+      const card = event.currentTarget;
+      selectClientCard(card);
+    });
+
+    window.addEventListener("resize", () => {
+      if (clientGallery.classList.contains("is-visible")) {
+        syncGalleryHeight();
+      }
+    });
+
+    const openMap = () => {
+      if (document.body.classList.contains("map-open")) return;
+      document.body.classList.add("map-open");
+      mapOverlay.setAttribute("aria-hidden", "false");
+      mapBackBtn.classList.add("is-visible");
+    };
+
+    const closeMap = () => {
+      document.body.classList.remove("map-open");
+      mapOverlay.setAttribute("aria-hidden", "true");
+      mapBackBtn.classList.remove("is-visible");
+    };
+
+    mapTab.addEventListener("click", openMap);
+    mapBackBtn.addEventListener("click", closeMap);
+    document.querySelector(".listing-area").addEventListener("click", () => {
+      if (document.body.classList.contains("map-open")) {
+        closeMap();
+      }
+    });
+
+    const countdownEl = document.getElementById("countdown");
+    let remainingSeconds = 59;
+
+    const updateCountdown = () => {
+      if (!countdownEl) return;
+      countdownEl.textContent = String(remainingSeconds).padStart(2, "0");
+      if (remainingSeconds <= 0) {
+        clearInterval(countdownTimer);
+      }
+      remainingSeconds = Math.max(0, remainingSeconds - 1);
+    };
+
+    const countdownTimer = setInterval(updateCountdown, 1000);
+    updateCountdown();
 
 
     applyStack();
+    setCurrentClient(primaryPanel.dataset.name);
     renderListing();
+    updateDebugIndex();
   </script>
 </body>
 </html>
