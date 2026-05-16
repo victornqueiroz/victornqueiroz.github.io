@@ -1,0 +1,43 @@
+{
+  "id": "shrine",
+  "name": "Shrine",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "wwwwwwwwwwwwwww",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wsssssssssssssw",
+    "wwwwwwwdwwwwwww"
+  ],
+  "exits": [
+    { "x": 7, "y": 14, "to": "woods_e", "spawn": { "x": 7, "y": 1 } }
+  ],
+  "objects": [
+    { "x": 7, "y": 4, "type": "npc", "npc": "halden" },
+    {
+      "x": 5, "y": 4, "color": "#9ad4ff",
+      "type": "pickup",
+      "item": "charm",
+      "text": "You take the silver charm. It feels warm against your palm.",
+      "journal": "Halden gave you a charm at the shrine. 'Remember what you can,' she said."
+    },
+    {
+      "x": 9, "y": 4, "color": "#d4af37",
+      "type": "pickup",
+      "item": "key",
+      "text": "You take the small iron key from the altar.",
+      "journal": "Took a small iron key from Halden's altar."
+    }
+  ]
+}

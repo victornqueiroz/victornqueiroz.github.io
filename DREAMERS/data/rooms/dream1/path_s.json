@@ -1,0 +1,28 @@
+{
+  "id": "path_s",
+  "name": "Path S",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "ppppppppppppppp",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg"
+  ],
+  "exits": [
+    { "x": 0,  "y": 7, "to": "cottage", "spawn": { "x": 13, "y": 7 } },
+    { "x": 14, "y": 7, "to": "bakery",  "spawn": { "x": 1,  "y": 7 } },
+    { "x": 7,  "y": 0, "to": "path_w",  "spawn": { "x": 7,  "y": 13 } }
+  ]
+}

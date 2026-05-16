@@ -1,0 +1,68 @@
+{
+  "lyra": {
+    "has_item_locket": [
+      "That pendant — let me see it closer.",
+      "My father had one with this exact engraving. He went into the mountains and never came back."
+    ],
+    "after_monster_seen": [
+      "Run, Aldric. I felt it the moment it stepped into the valley. Just run."
+    ],
+    "loop_gte_2": [
+      "You look pale today. Like you've slept badly."
+    ],
+    "default": [
+      "Morning, Aldric.",
+      "Take a roll if you want — oven's still warm."
+    ]
+  },
+  "cass": {
+    "after_monster_seen": [
+      "Something's wrong with this place. I'll scout up the pass — won't be long."
+    ],
+    "loop_gte_2": [
+      "You've got that look. Like you know something I don't."
+    ],
+    "default": [
+      "Aldric! Coming up the slope today?",
+      "The view's worth the bruises."
+    ]
+  },
+  "tomas": {
+    "after_monster_seen": [
+      "Where's Cass? Did you see him up there?"
+    ],
+    "talked_to_cass": [
+      "So you spoke to him. Tell me he wasn't planning anything stupid."
+    ],
+    "loop_gte_2": [
+      "...we've had this conversation, haven't we?"
+    ],
+    "default": [
+      "Mornin'. My brother's up the mountain again. Always pushing."
+    ]
+  },
+  "wem": {
+    "after_monster_seen": [
+      "I dreamt of it. The thing from the mountain. Many times."
+    ],
+    "loop_gte_2": [
+      "You've got that look. Like you've seen this morning before."
+    ],
+    "default": [
+      "The river's quiet today. Wasn't always so.",
+      "Lost a son to it, long before you were born."
+    ]
+  },
+  "halden": {
+    "after_monster_seen": [
+      "So it found you. Keep the charm close, Aldric."
+    ],
+    "loop_gte_2": [
+      "You found your way back. Good."
+    ],
+    "default": [
+      "You've come far, Aldric. Take what's on the altar.",
+      "Remember what you can."
+    ]
+  }
+}

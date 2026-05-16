@@ -1,0 +1,21 @@
+{
+  "dream1": {
+    "rooms": [
+      "cottage", "cottage_w",
+      "path_s", "path_w", "path_n", "path_e",
+      "bakery", "square", "well",
+      "mountain_pass", "mountain_foot",
+      "woods_e", "shrine", "shore",
+      "sky_bridge"
+    ],
+    "start_room": "cottage",
+    "start_position": { "x": 7, "y": 7 },
+    "map_grid": [
+      [null,            "mountain_pass", null,      "shrine",   null],
+      ["mountain_foot", "path_n",        "well",    "woods_e",  null],
+      [null,            "path_w",        "square",  "path_e",   "shore"],
+      ["cottage",       "path_s",        "bakery",  null,       null],
+      ["cottage_w",     null,            null,      null,       null]
+    ]
+  }
+}

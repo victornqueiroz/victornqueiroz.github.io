@@ -1,0 +1,29 @@
+{
+  "id": "shore",
+  "name": "Shore",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb",
+    "aaaaaaaaaaaabbb"
+  ],
+  "exits": [
+    { "x": 0, "y": 7, "to": "path_e", "spawn": { "x": 13, "y": 7 } }
+  ],
+  "objects": [
+    { "x": 5, "y": 7, "type": "npc", "npc": "wem" }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "f": { "color": "#6b4f3a", "walkable": true },
+  "w": { "color": "#3a2e22", "walkable": false },
+  "d": { "color": "#a47148", "walkable": true },
+  "g": { "color": "#3a4a3a", "walkable": true },
+  "p": { "color": "#7a6a4a", "walkable": true },
+  "s": { "color": "#6a6a72", "walkable": true },
+  "r": { "color": "#3a3a40", "walkable": false },
+  "b": { "color": "#2a4a6a", "walkable": false },
+  "a": { "color": "#b09870", "walkable": true },
+  "t": { "color": "#1a2a1a", "walkable": false },
+  "k": { "color": "#050510", "walkable": true }
+}

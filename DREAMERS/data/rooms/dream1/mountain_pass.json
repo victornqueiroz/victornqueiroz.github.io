@@ -1,0 +1,34 @@
+{
+  "id": "mountain_pass",
+  "name": "Mountain Pass",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "rrrrrrrrrrrrrrr",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss"
+  ],
+  "exits": [
+    { "x": 7, "y": 14, "to": "path_n", "spawn": { "x": 7, "y": 1 } }
+  ],
+  "objects": [
+    {
+      "x": 4, "y": 4, "color": "#7a5a3a",
+      "type": "examine",
+      "text": "An old cart, wheel cracked. Stuck for years, by the look of it.",
+      "journal": "A stuck cart in Mountain Pass. Something seems wrong about how it sits."
+    }
+  ]
+}

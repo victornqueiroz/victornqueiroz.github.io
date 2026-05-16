@@ -1,0 +1,29 @@
+/* Reset just enough to keep the page from scrolling and center the canvas. */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #1a1a1f;
+  color: #e6e6e6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Crisp pixel edges for the tile grid, with a subtle frame for visual separation. */
+#game {
+  display: block;
+  background: #000;
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 1px #2c2c33;
+}

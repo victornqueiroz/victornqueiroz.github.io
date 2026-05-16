@@ -1,0 +1,7 @@
+{
+  "lyra":   { "name": "Lyra",   "color": "#c47b4a", "journal": "Met Lyra, the baker. Her hands are always dusted with flour." },
+  "cass":   { "name": "Cass",   "color": "#7ab055", "journal": "Met Cass, the reckless hunter. Younger than Tomas." },
+  "tomas":  { "name": "Tomas",  "color": "#5a8a4a", "journal": "Met Tomas, the cautious hunter. Cass's older brother." },
+  "wem":    { "name": "Wem",    "color": "#a89466", "journal": "Met Wem, the old fisherman by the shore." },
+  "halden": { "name": "Halden", "color": "#9080b0", "journal": "Met Halden, the keeper of the shrine. She seemed to know me." }
+}

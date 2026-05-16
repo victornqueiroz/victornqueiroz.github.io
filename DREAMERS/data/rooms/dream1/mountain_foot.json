@@ -1,0 +1,36 @@
+{
+  "id": "mountain_foot",
+  "name": "Mountain Foot",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "rrrrrrrrrrrrrrr",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg"
+  ],
+  "exits": [
+    { "x": 14, "y": 7, "to": "path_n", "spawn": { "x": 1, "y": 7 } }
+  ],
+  "objects": [
+    { "x": 7, "y": 7, "type": "npc", "npc": "cass" },
+    {
+      "x": 8, "y": 7, "color": "#8a6a3a",
+      "type": "pickup",
+      "item": "horn",
+      "text": "You pick up a hunting horn. Its mouthpiece is worn smooth.",
+      "journal": "Picked up a hunting horn at Mountain Foot. Cass's, by the look of it."
+    }
+  ]
+}

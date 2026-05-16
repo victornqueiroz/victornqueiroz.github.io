@@ -1,0 +1,32 @@
+{
+  "id": "path_n",
+  "name": "Path N",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "ppppppppppppppp",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg",
+    "gggggggpggggggg"
+  ],
+  "exits": [
+    { "x": 7,  "y": 0,  "to": "mountain_pass", "spawn": { "x": 7,  "y": 13 } },
+    { "x": 7,  "y": 14, "to": "path_w",        "spawn": { "x": 7,  "y": 1  } },
+    { "x": 14, "y": 7,  "to": "well",          "spawn": { "x": 1,  "y": 7  } },
+    { "x": 0,  "y": 7,  "to": "mountain_foot", "spawn": { "x": 13, "y": 7  } }
+  ],
+  "objects": [
+    { "x": 9, "y": 7, "type": "npc", "npc": "tomas" }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "well",
+  "name": "The Well",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "gggggggsggggggg",
+    "pppppppsppppppp",
+    "gggggggsggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "ggggggggggggggg",
+    "gggggggpggggggg"
+  ],
+  "exits": [
+    { "x": 7,  "y": 14, "to": "square",  "spawn": { "x": 7,  "y": 1 } },
+    { "x": 14, "y": 7,  "to": "woods_e", "spawn": { "x": 1,  "y": 7 } },
+    { "x": 0,  "y": 7,  "to": "path_n",  "spawn": { "x": 13, "y": 7 } }
+  ],
+  "objects": [
+    {
+      "x": 7, "y": 7, "color": "#4a7090",
+      "type": "well",
+      "journal": "The Well at the heart of the village. Something feels wrong about how deep it is."
+    }
+  ]
+}

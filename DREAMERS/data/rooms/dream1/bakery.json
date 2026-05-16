@@ -1,0 +1,30 @@
+{
+  "id": "bakery",
+  "name": "Bakery",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "wwwwwwwdwwwwwww",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "dfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wwwwwwwwwwwwwww"
+  ],
+  "exits": [
+    { "x": 0, "y": 7, "to": "path_s", "spawn": { "x": 13, "y": 7 } },
+    { "x": 7, "y": 0, "to": "square", "spawn": { "x": 7,  "y": 13 } }
+  ],
+  "objects": [
+    { "x": 7, "y": 4, "type": "npc", "npc": "lyra" }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "sword":  { "name": "Sword",  "color": "#c0c0c8" },
+  "charm":  { "name": "Charm",  "color": "#9ad4ff", "persistent": true },
+  "key":    { "name": "Key",    "color": "#d4af37" },
+  "rope":   { "name": "Rope",   "color": "#a08858" },
+  "locket": { "name": "Locket", "color": "#e0c060" },
+  "horn":   { "name": "Horn",   "color": "#8a6a3a" }
+}

@@ -1,0 +1,39 @@
+{
+  "id": "cottage",
+  "name": "Cottage",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "wwwwwwwwwwwwwww",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffd",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wfffffffffffffw",
+    "wwwwwwwdwwwwwww"
+  ],
+  "exits": [
+    { "x": 14, "y": 7,  "to": "path_s",    "spawn": { "x": 1, "y": 7 } },
+    { "x": 7,  "y": 14, "to": "cottage_w", "spawn": { "x": 7, "y": 1 } }
+  ],
+  "objects": [
+    {
+      "x": 7, "y": 3, "color": "#5a3a22",
+      "type": "container",
+      "requires_item": "key",
+      "contents": "rope",
+      "locked_text": "The chest is locked. You'd need a key.",
+      "open_text": "You unlock the chest. A coil of rope lies inside.",
+      "journal_locked": "Aldric's chest is locked. Some kind of key would open it.",
+      "journal_open": "Opened the cottage chest. Found a coil of rope inside."
+    }
+  ]
+}

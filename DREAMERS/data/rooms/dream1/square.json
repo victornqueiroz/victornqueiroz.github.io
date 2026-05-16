@@ -1,0 +1,44 @@
+{
+  "id": "square",
+  "name": "The Square",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss",
+    "sssssssssssssss"
+  ],
+  "exits": [
+    { "x": 7,  "y": 0,  "to": "well",   "spawn": { "x": 7,  "y": 13 } },
+    { "x": 7,  "y": 14, "to": "bakery", "spawn": { "x": 7,  "y": 1  } },
+    { "x": 0,  "y": 7,  "to": "path_w", "spawn": { "x": 13, "y": 7  } },
+    { "x": 14, "y": 7,  "to": "path_e", "spawn": { "x": 1,  "y": 7  } }
+  ],
+  "objects": [
+    {
+      "x": 3, "y": 4, "color": "#c0c0c8",
+      "type": "pickup",
+      "item": "sword",
+      "text": "You pick up the sword. It's lighter than it looks.",
+      "journal": "Picked up a sword from the empty blacksmith's rack."
+    },
+    {
+      "x": 4, "y": 4, "color": "#7a6a4a",
+      "type": "examine",
+      "text": "A note on the rack: 'Took my brother's. Pay me back. — M.'",
+      "journal": "A note on the blacksmith's rack, signed 'M.' Nobody by that name in the village."
+    }
+  ]
+}

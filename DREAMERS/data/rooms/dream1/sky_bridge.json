@@ -1,0 +1,31 @@
+{
+  "id": "sky_bridge",
+  "name": "Sky Bridge",
+  "width": 15,
+  "height": 15,
+  "tiles": [
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkk"
+  ],
+  "objects": [
+    {
+      "x": 7, "y": 7, "color": "#7ab0d4",
+      "type": "examine",
+      "text": "The Well pulses softly. The dream you came from feels far away.",
+      "journal": "There is a Well on the Sky Bridge, too. It pulses with the dream you left."
+    }
+  ]
+}
