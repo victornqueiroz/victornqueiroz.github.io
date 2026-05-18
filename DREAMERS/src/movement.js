@@ -14,6 +14,19 @@
 
 import { isWalkable, findExit } from "./rooms.js";
 
+// The player sprite is anchored top-left and is one tile wide/tall, so it
+// visually covers [x, x+1] × [y, y+1]. To keep the sprite from overlapping
+// walls on the right/bottom, positive-direction movement also requires the
+// tile *beyond* the proposed tile to be walkable. Exit tiles are exempt so
+// doorways still trigger room transitions.
+function canOccupy(room, palette, dx, dy, x, y) {
+  if (!isWalkable(room, palette, x, y)) return false;
+  if (findExit(room, x, y)) return true;
+  if (dx > 0 && !isWalkable(room, palette, x + 1, y)) return false;
+  if (dy > 0 && !isWalkable(room, palette, x, y + 1)) return false;
+  return true;
+}
+
 const SPEED = 6;            // tiles per second
 const STEP_STRIDE = 1.0;    // tile-distance per walk-animation step
 
@@ -85,18 +98,18 @@ export function updateMovement(dt, state, palette, rooms) {
     const proposedTileX = Math.floor(proposedX);
     const tileY = Math.floor(state.player.y);
 
-    if (proposedTileX === curTileX || isWalkable(state.currentRoom, palette, proposedTileX, tileY)) {
+    if (proposedTileX === curTileX || canOccupy(state.currentRoom, palette, dx, dy, proposedTileX, tileY)) {
       state.player.x = proposedX;
     } else {
       // Blocked. Try cardinal slide-assist before clamping.
       let slid = false;
       if (!isDiagonal) {
         const fracY = state.player.y - tileY;
-        if (fracY > 0.5 && isWalkable(state.currentRoom, palette, proposedTileX, tileY + 1)) {
+        if (fracY > 0.5 && canOccupy(state.currentRoom, palette, dx, dy, proposedTileX, tileY + 1)) {
           state.player.y = tileY + 1;
           state.player.x = proposedX;
           slid = true;
-        } else if (fracY < 0.5 && isWalkable(state.currentRoom, palette, proposedTileX, tileY - 1)) {
+        } else if (fracY < 0.5 && canOccupy(state.currentRoom, palette, dx, dy, proposedTileX, tileY - 1)) {
           state.player.y = tileY - 0.001;
           state.player.x = proposedX;
           slid = true;
@@ -115,17 +128,17 @@ export function updateMovement(dt, state, palette, rooms) {
     const proposedTileY = Math.floor(proposedY);
     const tileX = Math.floor(state.player.x);
 
-    if (proposedTileY === curTileY || isWalkable(state.currentRoom, palette, tileX, proposedTileY)) {
+    if (proposedTileY === curTileY || canOccupy(state.currentRoom, palette, dx, dy, tileX, proposedTileY)) {
       state.player.y = proposedY;
     } else {
       let slid = false;
       if (!isDiagonal) {
         const fracX = state.player.x - tileX;
-        if (fracX > 0.5 && isWalkable(state.currentRoom, palette, tileX + 1, proposedTileY)) {
+        if (fracX > 0.5 && canOccupy(state.currentRoom, palette, dx, dy, tileX + 1, proposedTileY)) {
           state.player.x = tileX + 1;
           state.player.y = proposedY;
           slid = true;
-        } else if (fracX < 0.5 && isWalkable(state.currentRoom, palette, tileX - 1, proposedTileY)) {
+        } else if (fracX < 0.5 && canOccupy(state.currentRoom, palette, dx, dy, tileX - 1, proposedTileY)) {
           state.player.x = tileX - 0.001;
           state.player.y = proposedY;
           slid = true;
