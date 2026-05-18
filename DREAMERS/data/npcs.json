@@ -1,7 +1,7 @@
 {
-  "lyra":   { "name": "Lyra",   "color": "#c47b4a", "sprite": "marin",     "journal": "Met Lyra, the baker. Her hands are always dusted with flour." },
-  "cass":   { "name": "Cass",   "color": "#7ab055", "sprite": "dion",      "journal": "Met Cass, the reckless hunter. Younger than Tomas." },
-  "tomas":  { "name": "Tomas",  "color": "#5a8a4a", "sprite": "tarin",     "journal": "Met Tomas, the cautious hunter. Cass's older brother." },
+  "lyra":   { "name": "Lyra",   "color": "#c47b4a", "sprite": "girl",      "journal": "Met Lyra, the baker. Her hands are always dusted with flour." },
+  "cass":   { "name": "Cass",   "color": "#7ab055", "sprite": "geek",      "journal": "Met Cass, the reckless hunter. Younger than Tomas." },
+  "tomas":  { "name": "Tomas",  "color": "#5a8a4a", "sprite": "farmer",    "journal": "Met Tomas, the cautious hunter. Cass's older brother." },
   "wem":    { "name": "Wem",    "color": "#a89466", "sprite": "fisherman", "journal": "Met Wem, the old fisherman by the shore." },
   "halden": { "name": "Halden", "color": "#9080b0", "sprite": "witch",     "journal": "Met Halden, the keeper of the shrine. She seemed to know me." }
 }

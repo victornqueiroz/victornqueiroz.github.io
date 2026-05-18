@@ -1,12 +1,12 @@
 {
-  "sheets": {
-    "loz": "./sprites/placeholders/loz_npcs.png"
-  },
   "sprites": {
-    "marin":     { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 },
-    "tarin":     { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 },
-    "dion":      { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 },
-    "fisherman": { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 },
-    "witch":     { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 }
+    "girl":      { "src": "./sprites/placeholders/girl.png" },
+    "farmer":    { "src": "./sprites/placeholders/farmer.png" },
+    "geek":      { "src": "./sprites/placeholders/geek.png" },
+    "fisherman": { "src": "./sprites/placeholders/fisherman.png" },
+    "witch":     { "src": "./sprites/placeholders/witch.png" },
+    "grandma":   { "src": "./sprites/placeholders/grandma.png" },
+    "hermit":    { "src": "./sprites/placeholders/hermit.png" },
+    "signpost":  { "src": "./sprites/placeholders/signpost.png" }
   }
 }
