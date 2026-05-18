@@ -12,7 +12,7 @@
 // some magnetism. Slide-assist is off during diagonal motion; diagonals get
 // the natural per-axis wall slide instead.
 
-import { isWalkable, findExit } from "./rooms.js";
+import { isWalkable, findExit, findObjectAt } from "./rooms.js";
 
 // The player sprite is anchored top-left and is one tile wide/tall, so it
 // visually covers [x, x+1] × [y, y+1]. To keep the sprite from overlapping
@@ -115,8 +115,13 @@ export function updateMovement(dt, state, palette, rooms) {
           slid = true;
         }
       }
-      if (!slid && dx < 0) {
-        state.player.x = curTileX;
+      if (!slid) {
+        const blockedByObject =
+          findObjectAt(state.currentRoom, proposedTileX, tileY) ||
+          (dx > 0 && findObjectAt(state.currentRoom, proposedTileX + 1, tileY));
+        if (dx < 0 || blockedByObject) {
+          state.player.x = curTileX;
+        }
       }
     }
   }
@@ -144,8 +149,13 @@ export function updateMovement(dt, state, palette, rooms) {
           slid = true;
         }
       }
-      if (!slid && dy < 0) {
-        state.player.y = curTileY;
+      if (!slid) {
+        const blockedByObject =
+          findObjectAt(state.currentRoom, tileX, proposedTileY) ||
+          (dy > 0 && findObjectAt(state.currentRoom, tileX, proposedTileY + 1));
+        if (dy < 0 || blockedByObject) {
+          state.player.y = curTileY;
+        }
       }
     }
   }
