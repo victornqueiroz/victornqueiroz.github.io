@@ -36,7 +36,9 @@ export function updateCombat(dt, state, palette, rooms, roomGraph) {
     state.horn = null;
   }
 
-  evaluateMonsterTriggers(state);
+  // Automatic monster triggers (narrative + fallback) are disabled —
+  // the monster only spawns when the P debug key is pressed.
+  // evaluateMonsterTriggers(state);
 
   if (state.monsterTimer !== null) {
     state.monsterTimer -= dt;
