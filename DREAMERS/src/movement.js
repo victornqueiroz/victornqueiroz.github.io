@@ -115,7 +115,7 @@ export function updateMovement(dt, state, palette, rooms) {
           slid = true;
         }
       }
-      if (!slid) {
+      if (!slid && dx < 0) {
         state.player.x = curTileX;
       }
     }
@@ -144,7 +144,7 @@ export function updateMovement(dt, state, palette, rooms) {
           slid = true;
         }
       }
-      if (!slid) {
+      if (!slid && dy < 0) {
         state.player.y = curTileY;
       }
     }
