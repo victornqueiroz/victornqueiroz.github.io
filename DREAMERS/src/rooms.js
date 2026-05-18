@@ -77,11 +77,14 @@ function validateRoom(room, path) {
 }
 
 export function renderRoom(ctx, room, palette, npcs, sprites, tileSize) {
+  const tileColors = room.tile_colors ?? null;
   for (let y = 0; y < room.height; y++) {
     const row = room.tiles[y];
     for (let x = 0; x < room.width; x++) {
-      const type = palette[row[x]];
-      ctx.fillStyle = type ? type.color : UNKNOWN_TILE_COLOR;
+      const code = row[x];
+      const override = tileColors ? tileColors[code] : undefined;
+      const type = palette[code];
+      ctx.fillStyle = override ?? (type ? type.color : UNKNOWN_TILE_COLOR);
       ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
     }
   }

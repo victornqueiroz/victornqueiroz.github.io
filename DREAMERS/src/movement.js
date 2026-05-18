@@ -103,7 +103,7 @@ export function updateMovement(dt, state, palette, rooms) {
         }
       }
       if (!slid) {
-        state.player.x = dx > 0 ? curTileX + 0.999 : curTileX;
+        state.player.x = curTileX;
       }
     }
   }
@@ -132,7 +132,7 @@ export function updateMovement(dt, state, palette, rooms) {
         }
       }
       if (!slid) {
-        state.player.y = dy > 0 ? curTileY + 0.999 : curTileY;
+        state.player.y = curTileY;
       }
     }
   }

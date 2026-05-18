@@ -3,6 +3,11 @@
   "name": "Cottage",
   "width": 15,
   "height": 15,
+  "tile_colors": {
+    "f": "#6b8a4f",
+    "w": "#2e3a22",
+    "d": "#8a6b3a"
+  },
   "tiles": [
     "wwwwwwwwwwwwwww",
     "wfffffffffffffw",
