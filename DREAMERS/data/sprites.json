@@ -1,12 +1,16 @@
 {
   "sprites": {
-    "girl":      { "src": "./sprites/placeholders/girl.png" },
-    "farmer":    { "src": "./sprites/placeholders/farmer.png" },
-    "geek":      { "src": "./sprites/placeholders/geek.png" },
-    "fisherman": { "src": "./sprites/placeholders/fisherman.png" },
-    "witch":     { "src": "./sprites/placeholders/witch.png" },
-    "grandma":   { "src": "./sprites/placeholders/grandma.png" },
-    "hermit":    { "src": "./sprites/placeholders/hermit.png" },
-    "signpost":  { "src": "./sprites/placeholders/signpost.png" }
+    "girl":         { "src": "./sprites/placeholders/girl.png" },
+    "farmer":       { "src": "./sprites/placeholders/farmer.png" },
+    "geek":         { "src": "./sprites/placeholders/geek.png" },
+    "fisherman":    { "src": "./sprites/placeholders/fisherman.png" },
+    "witch":        { "src": "./sprites/placeholders/witch.png" },
+    "grandma":      { "src": "./sprites/placeholders/grandma.png" },
+    "hermit":       { "src": "./sprites/placeholders/hermit.png" },
+    "signpost":     { "src": "./sprites/placeholders/signpost.png" },
+    "player_up":    { "src": "./sprites/placeholders/player-up.png" },
+    "player_down":  { "src": "./sprites/placeholders/player-down.png" },
+    "player_left":  { "src": "./sprites/placeholders/player-left.png" },
+    "player_right": { "src": "./sprites/placeholders/player-right.png" }
   }
 }

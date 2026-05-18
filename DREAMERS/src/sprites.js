@@ -28,13 +28,23 @@ function loadImage(src) {
 
 // Returns true if it drew; false if the sprite couldn't be resolved. Callers
 // use the boolean to decide whether to fall back to a placeholder shape.
-export function drawSprite(ctx, system, spriteId, dx, dy, dw, dh) {
+// flipH=true mirrors the image horizontally — used to fake a walk cycle
+// when facing up/down with only one frame per direction.
+export function drawSprite(ctx, system, spriteId, dx, dy, dw, dh, flipH = false) {
   if (!system) return false;
   const img = system.images?.[spriteId];
   if (!img) return false;
   const prevSmooth = ctx.imageSmoothingEnabled;
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(img, dx, dy, dw, dh);
+  if (flipH) {
+    ctx.save();
+    ctx.translate(dx + dw, dy);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, 0, 0, dw, dh);
+    ctx.restore();
+  } else {
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
   ctx.imageSmoothingEnabled = prevSmooth;
   return true;
 }

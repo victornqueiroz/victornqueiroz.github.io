@@ -19,7 +19,7 @@ import {
 } from "./combat.js";
 import { addJournalEntry } from "./journal.js";
 import { attachMapInput, renderMap, renderMapIndicator } from "./map.js";
-import { loadSpriteAtlas } from "./sprites.js";
+import { loadSpriteAtlas, drawSprite } from "./sprites.js";
 
 const TILE_SIZE = 32;
 const ROOM_PX = 480; // 15 * 32
@@ -111,6 +111,7 @@ const state = {
     x: dream.start_position.x,
     y: dream.start_position.y,
     facing: { dx: 0, dy: 1 }, // initially facing south
+    stepCount: 0,             // increments each successful move; drives walk-cycle mirror
   },
   currentRoom: rooms[dream.start_room],
   inventory: [],
@@ -177,6 +178,23 @@ function update(dt) {
 function renderPlayer() {
   const px = state.player.x * TILE_SIZE;
   const py = state.player.y * TILE_SIZE;
+  const { dx, dy } = state.player.facing;
+
+  // Pick sprite by facing direction; up/down sprites are mirrored every other
+  // step to fake a walk cycle with a single frame.
+  let spriteId = null;
+  if (dy === -1) spriteId = "player_up";
+  else if (dy === 1) spriteId = "player_down";
+  else if (dx === -1) spriteId = "player_left";
+  else if (dx === 1) spriteId = "player_right";
+
+  const flipH = dy !== 0 && state.player.stepCount % 2 === 1;
+
+  if (spriteId && drawSprite(ctx, sprites, spriteId, px, py, TILE_SIZE, TILE_SIZE, flipH)) {
+    return;
+  }
+
+  // Fallback: yellow square + facing dot.
   ctx.fillStyle = PLAYER_COLOR;
   ctx.fillRect(
     px + PLAYER_INSET,
@@ -184,10 +202,8 @@ function renderPlayer() {
     TILE_SIZE - 2 * PLAYER_INSET,
     TILE_SIZE - 2 * PLAYER_INSET
   );
-  // Facing indicator: a small dot offset from center toward the facing tile.
   const cx = px + TILE_SIZE / 2;
   const cy = py + TILE_SIZE / 2;
-  const { dx, dy } = state.player.facing;
   ctx.fillStyle = PLAYER_FACING_COLOR;
   ctx.fillRect(cx + dx * 8 - 3, cy + dy * 8 - 3, 6, 6);
 }

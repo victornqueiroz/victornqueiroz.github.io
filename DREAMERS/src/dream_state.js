@@ -17,10 +17,11 @@ export function resetLoop(state, rooms, roomBlueprints, items, dream) {
   state.flags.well_activated = false;
   state.flags.well_roped = false;
 
-  // Player back to start, facing south.
+  // Player back to start, facing south, walk-cycle counter reset.
   state.player.x = dream.start_position.x;
   state.player.y = dream.start_position.y;
   state.player.facing = { dx: 0, dy: 1 };
+  state.player.stepCount = 0;
   state.currentRoom = rooms[dream.start_room];
 
   // Combat state — monster, timer, tint, horn all clear at the start of a new

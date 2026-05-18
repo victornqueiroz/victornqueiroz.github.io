@@ -85,4 +85,5 @@ function markVisited(state) {
   state.flags.visited_tiles.add(
     `${state.currentRoom.id}:${state.player.x}:${state.player.y}`
   );
+  state.player.stepCount = (state.player.stepCount ?? 0) + 1;
 }
