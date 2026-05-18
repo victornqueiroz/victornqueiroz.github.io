@@ -68,11 +68,40 @@ const roomEntries = await Promise.all(
 );
 const rooms = Object.fromEntries(roomEntries);
 
+// Compute each object's tile footprint from its sprite's native dimensions.
+// 16-px source corresponds to 1 game tile; wider/taller sprites span multiple
+// tiles. Must run before the blueprint snapshot so loop resets restore the
+// footprint along with the objects.
+hydrateObjects(rooms, npcs, sprites);
+
 // Snapshot original `objects` arrays so resetLoop can respawn them each loop.
 // Must happen before any gameplay mutates room state.
 const roomBlueprints = Object.fromEntries(
   Object.entries(rooms).map(([id, room]) => [id, structuredClone(room.objects ?? [])])
 );
+
+function hydrateObjects(rooms, npcs, sprites) {
+  const SPRITE_NATIVE_TILE = 16;
+  for (const room of Object.values(rooms)) {
+    if (!room.objects) continue;
+    for (const obj of room.objects) {
+      let img = null;
+      if (obj.type === "npc") {
+        const spriteId = npcs[obj.npc]?.sprite;
+        if (spriteId) img = sprites?.images?.[spriteId] ?? null;
+      }
+      if (img && img.naturalWidth && img.naturalHeight) {
+        obj.tw = Math.max(1, Math.round(img.naturalWidth / SPRITE_NATIVE_TILE));
+        obj.th = Math.max(1, Math.round(img.naturalHeight / SPRITE_NATIVE_TILE));
+        obj.extendsUp = obj.th > obj.tw;
+      } else {
+        obj.tw = 1;
+        obj.th = 1;
+        obj.extendsUp = false;
+      }
+    }
+  }
+}
 
 // Room graph (built once) — used by the monster's cross-room pathfinding.
 const roomGraph = buildRoomGraph(rooms);

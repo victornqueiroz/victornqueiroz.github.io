@@ -41,7 +41,16 @@ export function findExit(room, x, y) {
 
 export function findObjectAt(room, x, y) {
   if (!room.objects) return null;
-  return room.objects.find((o) => o.x === x && o.y === y) ?? null;
+  for (const obj of room.objects) {
+    const tw = obj.tw ?? 1;
+    const th = obj.th ?? 1;
+    const baseX = obj.x;
+    const baseY = obj.extendsUp ? obj.y - (th - 1) : obj.y;
+    if (x >= baseX && x < baseX + tw && y >= baseY && y < baseY + th) {
+      return obj;
+    }
+  }
+  return null;
 }
 
 export async function loadRoom(path) {
@@ -82,8 +91,12 @@ export function renderRoom(ctx, room, palette, npcs, sprites, tileSize) {
       const py = obj.y * tileSize;
       if (obj.type === "npc") {
         const npc = npcs[obj.npc];
+        const tw = obj.tw ?? 1;
+        const th = obj.th ?? 1;
+        const drawX = px;
+        const drawY = obj.extendsUp ? (obj.y - (th - 1)) * tileSize : py;
         const drew = npc?.sprite
-          ? drawSprite(ctx, sprites, npc.sprite, px, py, tileSize, tileSize)
+          ? drawSprite(ctx, sprites, npc.sprite, drawX, drawY, tw * tileSize, th * tileSize)
           : false;
         if (!drew) {
           // Triangle fallback if sprite is missing or atlas unloaded.
