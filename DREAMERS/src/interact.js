@@ -36,8 +36,8 @@ export function attachInteractInput(state, npcs, dialogueData) {
 function tryInteract(state, npcs, dialogueData) {
   const facing = state.player.facing;
   if (!facing) return;
-  const tx = state.player.x + facing.dx;
-  const ty = state.player.y + facing.dy;
+  const tx = Math.floor(state.player.x) + facing.dx;
+  const ty = Math.floor(state.player.y) + facing.dy;
   const obj = findObjectAt(state.currentRoom, tx, ty);
   if (!obj) return;
 

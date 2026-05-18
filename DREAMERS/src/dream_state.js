@@ -22,6 +22,7 @@ export function resetLoop(state, rooms, roomBlueprints, items, dream) {
   state.player.y = dream.start_position.y;
   state.player.facing = { dx: 0, dy: 1 };
   state.player.stepCount = 0;
+  state.player.distance = 0;
   state.currentRoom = rooms[dream.start_room];
 
   // Combat state — monster, timer, tint, horn all clear at the start of a new

@@ -94,8 +94,8 @@ function stepMonster(state, palette, rooms, roomGraph) {
   // Horn distraction takes precedence over player as target.
   const distracted = state.horn && performance.now() < state.horn.until;
   const targetRoomId = distracted ? state.horn.roomId : state.currentRoom.id;
-  const targetX = distracted ? state.horn.x : state.player.x;
-  const targetY = distracted ? state.horn.y : state.player.y;
+  const targetX = distracted ? state.horn.x : Math.floor(state.player.x);
+  const targetY = distracted ? state.horn.y : Math.floor(state.player.y);
 
   const sameRoom = m.roomId === targetRoomId;
   let target;
@@ -175,7 +175,12 @@ function findNextRoomToward(roomGraph, fromRoom, toRoom) {
 
 export function monsterCaughtPlayer(state) {
   const m = state.monster;
-  return !!m && m.roomId === state.currentRoom.id && m.x === state.player.x && m.y === state.player.y;
+  return (
+    !!m &&
+    m.roomId === state.currentRoom.id &&
+    m.x === Math.floor(state.player.x) &&
+    m.y === Math.floor(state.player.y)
+  );
 }
 
 export function attachAttackInput(state) {
@@ -198,8 +203,10 @@ function tryAttack(state) {
     state.message = "Nothing to strike.";
     return;
   }
-  const dx = m.x - state.player.x;
-  const dy = m.y - state.player.y;
+  const px = Math.floor(state.player.x);
+  const py = Math.floor(state.player.y);
+  const dx = m.x - px;
+  const dy = m.y - py;
   const adjacent = Math.abs(dx) + Math.abs(dy) === 1;
   const facing = dx === state.player.facing.dx && dy === state.player.facing.dy;
   if (!adjacent || !facing) {
@@ -226,8 +233,8 @@ export function attachDebugMonsterSpawn(state) {
 
 export function blowHorn(state) {
   state.horn = {
-    x: state.player.x,
-    y: state.player.y,
+    x: Math.floor(state.player.x),
+    y: Math.floor(state.player.y),
     roomId: state.currentRoom.id,
     until: performance.now() + HORN_DISTRACT_MS,
   };

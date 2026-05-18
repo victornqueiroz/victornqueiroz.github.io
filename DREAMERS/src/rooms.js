@@ -96,7 +96,7 @@ export function renderRoom(ctx, room, palette, npcs, sprites, tileSize) {
         const drawX = px;
         const drawY = obj.extendsUp ? (obj.y - (th - 1)) * tileSize : py;
         const drew = npc?.sprite
-          ? drawSprite(ctx, sprites, npc.sprite, drawX, drawY, tw * tileSize, th * tileSize)
+          ? drawSprite(ctx, sprites, npc.sprite, drawX, drawY, tw * tileSize, th * tileSize, obj.flipH ?? false)
           : false;
         if (!drew) {
           // Triangle fallback if sprite is missing or atlas unloaded.

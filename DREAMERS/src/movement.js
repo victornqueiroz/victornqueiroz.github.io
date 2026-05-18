@@ -1,12 +1,15 @@
-// Player input and tile-based movement.
+// Player input and continuous movement.
 //
-// Input model: WASD + arrow keys. Last-pressed direction wins (a stack of
-// currently-held directions). First press steps immediately; further steps
-// fire every STEP_INTERVAL seconds while the key remains held.
+// Input model: WASD + arrow keys. Last-pressed direction wins (stack of
+// held directions). Diagonals are disabled — only the most recently pressed
+// axis is active. Position is a float in tile units; collision is still
+// tile-based via isWalkable, which means the player can sub-tile-position
+// freely within a walkable cell but can't cross into an unwalkable one.
 
 import { isWalkable, findExit } from "./rooms.js";
 
-const STEP_INTERVAL = 0.15; // seconds per tile when a direction is held
+const SPEED = 6;            // tiles per second
+const STEP_STRIDE = 1.0;    // tile-distance per walk-animation step
 
 const DIRECTIONS = {
   up:    { dx:  0, dy: -1 },
@@ -26,18 +29,14 @@ function keyToDirection(key) {
 }
 
 const heldDirections = []; // stack; last entry is the most recently pressed
-let stepCooldown = 0;
 
 export function attachInput() {
   document.addEventListener("keydown", (e) => {
     const dir = keyToDirection(e.key);
     if (!dir) return;
     e.preventDefault();
-    if (e.repeat) return; // ignore OS-level key repeat; we run our own timer
-    if (!heldDirections.includes(dir)) {
-      heldDirections.push(dir);
-      stepCooldown = 0; // first press steps immediately
-    }
+    if (e.repeat) return;
+    if (!heldDirections.includes(dir)) heldDirections.push(dir);
   });
 
   document.addEventListener("keyup", (e) => {
@@ -49,41 +48,64 @@ export function attachInput() {
 }
 
 export function updateMovement(dt, state, palette, rooms) {
-  if (state.dialogue || state.journalOpen || state.mapOpen) return; // movement frozen during modal UI
-  stepCooldown -= dt;
-  if (stepCooldown > 0 || heldDirections.length === 0) return;
+  if (state.dialogue || state.journalOpen || state.mapOpen) return;
+  if (heldDirections.length === 0) return;
 
   const dir = heldDirections[heldDirections.length - 1];
   const { dx, dy } = DIRECTIONS[dir];
-
-  // Facing always updates — pressing into a wall turns the player in place
-  // so they can examine what's in front of them.
   state.player.facing = { dx, dy };
 
-  const nx = state.player.x + dx;
-  const ny = state.player.y + dy;
+  const step = SPEED * dt;
+  let moved = false;
 
-  const exit = findExit(state.currentRoom, nx, ny);
+  if (dx !== 0) {
+    const proposedX = state.player.x + dx * step;
+    const curTileX = Math.floor(state.player.x);
+    const proposedTileX = Math.floor(proposedX);
+    const tileY = Math.floor(state.player.y);
+    if (proposedTileX === curTileX || isWalkable(state.currentRoom, palette, proposedTileX, tileY)) {
+      state.player.x = proposedX;
+      moved = true;
+    } else {
+      // Blocked — snap flush to the wall so the player doesn't sit halfway out.
+      state.player.x = dx > 0 ? curTileX + 0.999 : curTileX;
+    }
+  }
+
+  if (dy !== 0) {
+    const proposedY = state.player.y + dy * step;
+    const curTileY = Math.floor(state.player.y);
+    const proposedTileY = Math.floor(proposedY);
+    const tileX = Math.floor(state.player.x);
+    if (proposedTileY === curTileY || isWalkable(state.currentRoom, palette, tileX, proposedTileY)) {
+      state.player.y = proposedY;
+      moved = true;
+    } else {
+      state.player.y = dy > 0 ? curTileY + 0.999 : curTileY;
+    }
+  }
+
+  if (!moved) return;
+
+  // Walk-cycle counter is distance-based so animation cadence is consistent
+  // regardless of frame rate.
+  state.player.distance = (state.player.distance ?? 0) + step;
+  state.player.stepCount = Math.floor(state.player.distance / STEP_STRIDE);
+
+  // Mark current tile as visited; Set dedups so it's safe to call every frame.
+  const tileX = Math.floor(state.player.x);
+  const tileY = Math.floor(state.player.y);
+  state.flags.visited_tiles.add(`${state.currentRoom.id}:${tileX}:${tileY}`);
+
+  // Trigger exit when the player's tile crosses onto an exit cell.
+  const exit = findExit(state.currentRoom, tileX, tileY);
   if (exit) {
     const target = rooms[exit.to];
     if (target) {
       state.currentRoom = target;
       state.player.x = exit.spawn.x;
       state.player.y = exit.spawn.y;
-      markVisited(state);
+      state.flags.visited_tiles.add(`${target.id}:${exit.spawn.x}:${exit.spawn.y}`);
     }
-  } else if (isWalkable(state.currentRoom, palette, nx, ny)) {
-    state.player.x = nx;
-    state.player.y = ny;
-    markVisited(state);
   }
-
-  stepCooldown = STEP_INTERVAL;
-}
-
-function markVisited(state) {
-  state.flags.visited_tiles.add(
-    `${state.currentRoom.id}:${state.player.x}:${state.player.y}`
-  );
-  state.player.stepCount = (state.player.stepCount ?? 0) + 1;
 }

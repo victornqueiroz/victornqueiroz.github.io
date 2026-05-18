@@ -24,6 +24,6 @@
     { "x": 0, "y": 7, "to": "path_e", "spawn": { "x": 13, "y": 7 } }
   ],
   "objects": [
-    { "x": 5, "y": 7, "type": "npc", "npc": "wem" }
+    { "x": 11, "y": 7, "type": "npc", "npc": "wem", "flipH": true }
   ]
 }

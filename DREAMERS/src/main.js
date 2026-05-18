@@ -111,7 +111,8 @@ const state = {
     x: dream.start_position.x,
     y: dream.start_position.y,
     facing: { dx: 0, dy: 1 }, // initially facing south
-    stepCount: 0,             // increments each successful move; drives walk-cycle mirror
+    stepCount: 0,             // derived from distance; drives walk-cycle mirror
+    distance: 0,              // tile-distance traveled this loop, accumulates over time
   },
   currentRoom: rooms[dream.start_room],
   inventory: [],
