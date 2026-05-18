@@ -3,6 +3,8 @@
 // code to its visual (and later: walkability, sprite, etc.). Rooms may also
 // declare interactable `objects` placed on top of tiles.
 
+import { drawSprite } from "./sprites.js";
+
 const UNKNOWN_TILE_COLOR = "#ff00ff"; // magenta — surfaces authoring typos visibly
 const OBJECT_INSET = 4;                // px inside the tile when drawing an object
 
@@ -65,7 +67,7 @@ function validateRoom(room, path) {
   }
 }
 
-export function renderRoom(ctx, room, palette, npcs, tileSize) {
+export function renderRoom(ctx, room, palette, npcs, sprites, tileSize) {
   for (let y = 0; y < room.height; y++) {
     const row = room.tiles[y];
     for (let x = 0; x < room.width; x++) {
@@ -76,23 +78,28 @@ export function renderRoom(ctx, room, palette, npcs, tileSize) {
   }
   if (room.objects) {
     for (const obj of room.objects) {
-      const color =
-        obj.type === "npc" ? npcs[obj.npc]?.color ?? UNKNOWN_TILE_COLOR : obj.color;
-      ctx.fillStyle = color;
+      const px = obj.x * tileSize;
+      const py = obj.y * tileSize;
       if (obj.type === "npc") {
-        // Triangle (point up) — visually distinguishes NPCs from item/object squares.
-        const px = obj.x * tileSize;
-        const py = obj.y * tileSize;
-        ctx.beginPath();
-        ctx.moveTo(px + tileSize / 2, py + OBJECT_INSET);
-        ctx.lineTo(px + OBJECT_INSET, py + tileSize - OBJECT_INSET);
-        ctx.lineTo(px + tileSize - OBJECT_INSET, py + tileSize - OBJECT_INSET);
-        ctx.closePath();
-        ctx.fill();
+        const npc = npcs[obj.npc];
+        const drew = npc?.sprite
+          ? drawSprite(ctx, sprites, npc.sprite, px, py, tileSize, tileSize)
+          : false;
+        if (!drew) {
+          // Triangle fallback if sprite is missing or atlas unloaded.
+          ctx.fillStyle = npc?.color ?? UNKNOWN_TILE_COLOR;
+          ctx.beginPath();
+          ctx.moveTo(px + tileSize / 2, py + OBJECT_INSET);
+          ctx.lineTo(px + OBJECT_INSET, py + tileSize - OBJECT_INSET);
+          ctx.lineTo(px + tileSize - OBJECT_INSET, py + tileSize - OBJECT_INSET);
+          ctx.closePath();
+          ctx.fill();
+        }
       } else {
+        ctx.fillStyle = obj.color;
         ctx.fillRect(
-          obj.x * tileSize + OBJECT_INSET,
-          obj.y * tileSize + OBJECT_INSET,
+          px + OBJECT_INSET,
+          py + OBJECT_INSET,
           tileSize - 2 * OBJECT_INSET,
           tileSize - 2 * OBJECT_INSET
         );

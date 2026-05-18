@@ -1,0 +1,12 @@
+{
+  "sheets": {
+    "loz": "./sprites/placeholders/loz_npcs.png"
+  },
+  "sprites": {
+    "marin":     { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 },
+    "tarin":     { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 },
+    "dion":      { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 },
+    "fisherman": { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 },
+    "witch":     { "sheet": "loz", "x": 0, "y": 0, "w": 16, "h": 16 }
+  }
+}

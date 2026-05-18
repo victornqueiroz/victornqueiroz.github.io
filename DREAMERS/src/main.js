@@ -19,6 +19,7 @@ import {
 } from "./combat.js";
 import { addJournalEntry } from "./journal.js";
 import { attachMapInput, renderMap, renderMapIndicator } from "./map.js";
+import { loadSpriteAtlas } from "./sprites.js";
 
 const TILE_SIZE = 32;
 const ROOM_PX = 480; // 15 * 32
@@ -48,12 +49,18 @@ const ctx = canvas.getContext("2d");
 
 // Load palette + dream manifest + item/npc/dialogue definitions in parallel,
 // then every room the dream declares.
-const [palette, dreams, items, npcs, dialogueData] = await Promise.all([
+const [palette, dreams, items, npcs, dialogueData, sprites] = await Promise.all([
   loadTilePalette("./data/tiles.json"),
   loadDream("./data/dreams.json"),
   fetch("./data/items.json").then((r) => r.json()),
   fetch("./data/npcs.json").then((r) => r.json()),
   loadDialogue("./data/dialogue/dream1.json"),
+  // Sprite atlas is optional — if the sheet PNG is missing or the atlas
+  // fails to load, NPCs fall back to colored triangles.
+  loadSpriteAtlas("./data/sprites.json").catch((err) => {
+    console.warn("Sprite atlas not loaded — using shape fallbacks:", err.message);
+    return null;
+  }),
 ]);
 const dream = dreams.dream1;
 const roomEntries = await Promise.all(
@@ -184,7 +191,7 @@ function render() {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  renderRoom(ctx, state.currentRoom, palette, npcs, TILE_SIZE);
+  renderRoom(ctx, state.currentRoom, palette, npcs, sprites, TILE_SIZE);
   renderHornMarker(ctx, state, TILE_SIZE);
   renderMonster(ctx, state, TILE_SIZE);
   renderPlayer();
