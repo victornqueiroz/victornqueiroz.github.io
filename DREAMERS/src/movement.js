@@ -1,10 +1,16 @@
 // Player input and continuous movement.
 //
-// Input model: WASD + arrow keys. Last-pressed direction wins (stack of
-// held directions). Diagonals are disabled — only the most recently pressed
-// axis is active. Position is a float in tile units; collision is still
-// tile-based via isWalkable, which means the player can sub-tile-position
-// freely within a walkable cell but can't cross into an unwalkable one.
+// Input model: WASD + arrow keys. Held keys combine into a velocity vector;
+// last-pressed wins per-axis (pressing right while still holding left flips
+// horizontal direction). Diagonals are allowed and normalized so they cover
+// the same distance per second as axial motion. Facing follows the most
+// recently pressed key (cardinal) — used by interact / attack.
+//
+// Collision is tile-based on a float position. When walking cardinally into
+// a wall with a walkable tile just past it on the perpendicular axis, a
+// "slide assist" nudges the player onto that tile — gives 1-tile doorways
+// some magnetism. Slide-assist is off during diagonal motion; diagonals get
+// the natural per-axis wall slide instead.
 
 import { isWalkable, findExit } from "./rooms.js";
 
@@ -28,7 +34,7 @@ function keyToDirection(key) {
   }
 }
 
-const heldDirections = []; // stack; last entry is the most recently pressed
+const heldDirections = [];
 
 export function attachInput() {
   document.addEventListener("keydown", (e) => {
@@ -51,53 +57,99 @@ export function updateMovement(dt, state, palette, rooms) {
   if (state.dialogue || state.journalOpen || state.mapOpen) return;
   if (heldDirections.length === 0) return;
 
-  const dir = heldDirections[heldDirections.length - 1];
-  const { dx, dy } = DIRECTIONS[dir];
-  state.player.facing = { dx, dy };
+  // Per-axis last-pressed wins. Holding right then up gives dx=1, dy=-1.
+  let dx = 0, dy = 0;
+  for (const dir of heldDirections) {
+    const v = DIRECTIONS[dir];
+    if (v.dx !== 0) dx = v.dx;
+    if (v.dy !== 0) dy = v.dy;
+  }
+  if (dx === 0 && dy === 0) return;
 
-  const step = SPEED * dt;
-  let moved = false;
+  // Facing follows the most recently pressed key (cardinal direction).
+  state.player.facing = { ...DIRECTIONS[heldDirections[heldDirections.length - 1]] };
 
+  // Normalize so diagonal speed matches cardinal.
+  const norm = Math.sqrt(dx * dx + dy * dy);
+  const stepX = (dx / norm) * SPEED * dt;
+  const stepY = (dy / norm) * SPEED * dt;
+  const isDiagonal = dx !== 0 && dy !== 0;
+
+  const oldX = state.player.x;
+  const oldY = state.player.y;
+
+  // --- X axis -----------------------------------------------------------
   if (dx !== 0) {
-    const proposedX = state.player.x + dx * step;
+    const proposedX = state.player.x + stepX;
     const curTileX = Math.floor(state.player.x);
     const proposedTileX = Math.floor(proposedX);
     const tileY = Math.floor(state.player.y);
+
     if (proposedTileX === curTileX || isWalkable(state.currentRoom, palette, proposedTileX, tileY)) {
       state.player.x = proposedX;
-      moved = true;
     } else {
-      // Blocked — snap flush to the wall so the player doesn't sit halfway out.
-      state.player.x = dx > 0 ? curTileX + 0.999 : curTileX;
+      // Blocked. Try cardinal slide-assist before clamping.
+      let slid = false;
+      if (!isDiagonal) {
+        const fracY = state.player.y - tileY;
+        if (fracY > 0.5 && isWalkable(state.currentRoom, palette, proposedTileX, tileY + 1)) {
+          state.player.y = tileY + 1;
+          state.player.x = proposedX;
+          slid = true;
+        } else if (fracY < 0.5 && isWalkable(state.currentRoom, palette, proposedTileX, tileY - 1)) {
+          state.player.y = tileY - 0.001;
+          state.player.x = proposedX;
+          slid = true;
+        }
+      }
+      if (!slid) {
+        state.player.x = dx > 0 ? curTileX + 0.999 : curTileX;
+      }
     }
   }
 
+  // --- Y axis -----------------------------------------------------------
   if (dy !== 0) {
-    const proposedY = state.player.y + dy * step;
+    const proposedY = state.player.y + stepY;
     const curTileY = Math.floor(state.player.y);
     const proposedTileY = Math.floor(proposedY);
     const tileX = Math.floor(state.player.x);
+
     if (proposedTileY === curTileY || isWalkable(state.currentRoom, palette, tileX, proposedTileY)) {
       state.player.y = proposedY;
-      moved = true;
     } else {
-      state.player.y = dy > 0 ? curTileY + 0.999 : curTileY;
+      let slid = false;
+      if (!isDiagonal) {
+        const fracX = state.player.x - tileX;
+        if (fracX > 0.5 && isWalkable(state.currentRoom, palette, tileX + 1, proposedTileY)) {
+          state.player.x = tileX + 1;
+          state.player.y = proposedY;
+          slid = true;
+        } else if (fracX < 0.5 && isWalkable(state.currentRoom, palette, tileX - 1, proposedTileY)) {
+          state.player.x = tileX - 0.001;
+          state.player.y = proposedY;
+          slid = true;
+        }
+      }
+      if (!slid) {
+        state.player.y = dy > 0 ? curTileY + 0.999 : curTileY;
+      }
     }
   }
 
-  if (!moved) return;
+  // Actual distance traveled this frame (accounts for slides + blocks).
+  const deltaX = state.player.x - oldX;
+  const deltaY = state.player.y - oldY;
+  if (deltaX === 0 && deltaY === 0) return;
 
-  // Walk-cycle counter is distance-based so animation cadence is consistent
-  // regardless of frame rate.
-  state.player.distance = (state.player.distance ?? 0) + step;
+  state.player.distance = (state.player.distance ?? 0) + Math.sqrt(deltaX * deltaX + deltaY * deltaY);
   state.player.stepCount = Math.floor(state.player.distance / STEP_STRIDE);
 
-  // Mark current tile as visited; Set dedups so it's safe to call every frame.
   const tileX = Math.floor(state.player.x);
   const tileY = Math.floor(state.player.y);
   state.flags.visited_tiles.add(`${state.currentRoom.id}:${tileX}:${tileY}`);
 
-  // Trigger exit when the player's tile crosses onto an exit cell.
+  // Room transition when the player's tile lands on an exit cell.
   const exit = findExit(state.currentRoom, tileX, tileY);
   if (exit) {
     const target = rooms[exit.to];
