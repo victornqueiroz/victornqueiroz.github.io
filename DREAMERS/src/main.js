@@ -180,15 +180,26 @@ function renderPlayer() {
   const py = state.player.y * TILE_SIZE;
   const { dx, dy } = state.player.facing;
 
-  // Pick sprite by facing direction; up/down sprites are mirrored every other
-  // step to fake a walk cycle with a single frame.
+  // Pick sprite + mirror by facing direction:
+  //   - Up/down: single sprite, mirrored every other step (fakes the walk cycle).
+  //   - Left:    alternates between player_left1 / player_left2 per step.
+  //   - Right:   same two frames, horizontally mirrored.
   let spriteId = null;
-  if (dy === -1) spriteId = "player_up";
-  else if (dy === 1) spriteId = "player_down";
-  else if (dx === -1) spriteId = "player_left";
-  else if (dx === 1) spriteId = "player_right";
+  let flipH = false;
+  const oddStep = state.player.stepCount % 2 === 1;
 
-  const flipH = dy !== 0 && state.player.stepCount % 2 === 1;
+  if (dy === -1) {
+    spriteId = "player_up";
+    flipH = oddStep;
+  } else if (dy === 1) {
+    spriteId = "player_down";
+    flipH = oddStep;
+  } else if (dx === -1) {
+    spriteId = oddStep ? "player_left2" : "player_left1";
+  } else if (dx === 1) {
+    spriteId = oddStep ? "player_left2" : "player_left1";
+    flipH = true;
+  }
 
   if (spriteId && drawSprite(ctx, sprites, spriteId, px, py, TILE_SIZE, TILE_SIZE, flipH)) {
     return;
